@@ -52,7 +52,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <div class="muted" style="font-size: 12px">Lead to Payment · prototype with sample data</div>
 </div>
 </div>
-</div>
 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end">
 <div>
 <button type="button" style="font: inherit; position: relative; width: 40px; height: 40px; border-radius: 8px; border: 1px solid #D6D6CF; background: #FFFFFF; color: #1B1E23; cursor: pointer; display: inline-flex; align-items: center; justify-content: center" aria-label="{{ notif.aria }}" aria-expanded="{{ notif.expanded }}" onClick="{{ toggleNotif }}"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5a5 5 0 0 0-5 5v3l-1.5 3h13L15 10.5v-3a5 5 0 0 0-5-5zM8 16a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></svg><sc-if value="{{ notif.hasUnread }}" hint-placeholder-val="{{ true }}"><span style="position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; background: #DC2626; color: #FFFFFF; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">{{ notif.unread }}</span></sc-if></button>
@@ -692,6 +691,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <h2 style="margin: 0; font-size: 16px">PO history</h2>
 <p class="muted" style="margin: 0; font-size: 13px">Everything that happened to this order, newest first.</p>
 <sc-for list="{{ po.history }}" as="h" hint-placeholder-count="3"><div style="display: flex; gap: 12px; border-top: 1px solid #EFEFEA; padding-top: 8px; font-size: 14px"><span class="muted" style="width: 100px; flex: none">{{ h.date }}</span><div style="display: flex; flex-direction: column; gap: 2px"><strong>{{ h.title }}</strong><span class="muted" style="font-size: 13px">{{ h.detail }}</span></div></div></sc-for>
+</section>
 </div>
 </sc-if>
 
