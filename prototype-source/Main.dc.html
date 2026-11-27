@@ -504,8 +504,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <sc-if value="{{ isOrders }}" hint-placeholder-val="{{ false }}">
 <div style="display: flex; flex-direction: column; gap: 16px">
 <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
-<div><h1 style="margin: 0; font-size: 24px">Orders (POs)</h1><p class="muted" style="margin: 4px 0 0">Every PO not fully dispatched. Each line is either made in our factory or bought in.</p></div>
-<button class="btn btn-primary" onClick="{{ toggleUpload }}">Upload PO PDF</button>
+<div><h1 style="margin: 0; font-size: 24px">Orders (POs)</h1><p class="muted" style="margin: 4px 0 0">Every order not yet dispatched. Open one to see its items, dates, production status and history.</p></div>
+<button class="btn btn-primary" onClick="{{ toggleUpload }}">+ New order (upload PO)</button>
 </div>
 <sc-if value="{{ uploadDone }}" hint-placeholder-val="{{ false }}"><section class="card" style="background: #E7F4EC; border-color: #A7D7B8; font-size: 14px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center"><span>{{ uploadMsg }}</span><div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-primary btn-sm" onClick="{{ openChart }}">Print production chart</button><button class="btn btn-sm" onClick="{{ openUpLead }}">Open the client</button></div></section></sc-if>
 <sc-if value="{{ uploadOpen }}" hint-placeholder-val="{{ false }}">
@@ -532,13 +532,27 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <sc-if value="{{ upHasMatch }}" hint-placeholder-val="{{ true }}"><div style="{{ upMatchStyle }}">{{ upMatchText }}</div></sc-if>
 </div>
 <h3 style="margin: 0; font-size: 14px">Step 2 · Check what the AI read from the PDF</h3>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px">
-<sc-for list="{{ aiFields }}" as="f" hint-placeholder-count="6"><div style="border: 1px solid #E4E4DE; border-radius: 8px; padding: 10px"><div class="lbl" style="margin-bottom: 2px">{{ f.k }}</div><div style="font-size: 14px">{{ f.v }}</div></div></sc-for>
+<p class="muted" style="margin: 0; font-size: 13px">Filled in by AI from the PDF. Correct anything that is wrong before saving.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+<div><span class="lbl">Customer</span><div style="font-size: 14px; min-height: 40px; display: flex; align-items: center">{{ up.customer }}</div></div>
+<div><label class="lbl" for="up-cpo">Customer PO number</label><input id="up-cpo" class="field" type="text" value="{{ up.custPo }}" onChange="{{ up.set.custPo }}"></div>
+<div><label class="lbl" for="up-date">PO date</label><input id="up-date" class="field" type="date" value="{{ up.date }}" onChange="{{ up.set.date }}"></div>
+<div><label class="lbl" for="up-del">Deliver by</label><input id="up-del" class="field" type="date" value="{{ up.deliver }}" onChange="{{ up.set.deliver }}"></div>
+<div><label class="lbl" for="up-ld">Late-delivery penalty</label><input id="up-ld" class="field" type="text" value="{{ up.ld }}" onChange="{{ up.set.ld }}"></div>
+<div><label class="lbl" for="up-terms">Payment terms</label><input id="up-terms" class="field" type="text" value="{{ up.terms }}" onChange="{{ up.set.terms }}"></div>
 </div>
-<div style="overflow-x: auto"><div style="min-width: 640px">
-<div class="th" style="grid-template-columns: minmax(150px, 2fr) 130px 150px 100px"><span>Item</span><span>Sizes</span><span>Quantity</span><span>Type</span></div>
-<sc-for list="{{ aiLines }}" as="ln" hint-placeholder-count="2"><div class="tr" style="grid-template-columns: minmax(150px, 2fr) 130px 150px 100px"><span>{{ ln.item }}</span><span>{{ ln.size }}</span><span>{{ ln.qty }}</span><span><span style="{{ ln.typePill }}">{{ ln.type }}</span></span></div></sc-for>
-</div></div>
+<span class="lbl" style="margin: 4px 0 0">Items on the PO</span>
+<datalist id="prod-list2"><option value="Reflective Safety Jacket"></option><option value="Hi-Vis Reflective Vest"></option><option value="LED Reflective Safety Jacket"></option><option value="Auto-Glow Reflective Safety Jacket"></option><option value="FR Coverall"></option><option value="FR Jacket"></option><option value="FR Trousers"></option><option value="FR Hood"></option><option value="3M Scotchlite reflective tape"></option><option value="Safety helmet"></option><option value="Safety gloves"></option><option value="Safety shoes"></option></datalist>
+<sc-for list="{{ up.lines }}" as="ln" hint-placeholder-count="2">
+<div style="border: 1px solid #E4E4DE; border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; align-items: end">
+<div style="grid-column: span 2"><label class="lbl" for="{{ ln.iid }}">Item {{ ln.n }}</label><input id="{{ ln.iid }}" class="field" type="text" list="prod-list2" value="{{ ln.item }}" onChange="{{ ln.set.item }}"></div>
+<div><label class="lbl" for="{{ ln.sid }}">Sizes (use /)</label><input id="{{ ln.sid }}" class="field" type="text" value="{{ ln.size }}" onChange="{{ ln.set.size }}" placeholder="M / L / XL"></div>
+<div><label class="lbl" for="{{ ln.qid }}">Quantity per size (use /)</label><input id="{{ ln.qid }}" class="field" type="text" value="{{ ln.qty }}" onChange="{{ ln.set.qty }}" placeholder="200 / 300 / 100"></div>
+<div style="display: flex; gap: 6px; align-items: end"><div role="group" aria-label="{{ ln.typeAria }}" style="display: flex; gap: 4px"><button type="button" aria-pressed="{{ ln.isMake }}" style="{{ ln.makeStyle }}" onClick="{{ ln.setMake }}">Make</button><button type="button" aria-pressed="{{ ln.isBuy }}" style="{{ ln.buyStyle }}" onClick="{{ ln.setBuy }}">Buy-in</button></div><sc-if value="{{ ln.canRemove }}" hint-placeholder-val="{{ true }}"><button type="button" class="btn btn-sm" style="min-height: 36px" aria-label="{{ ln.removeAria }}" onClick="{{ ln.remove }}">×</button></sc-if></div>
+</div>
+</sc-for>
+<div><button type="button" class="btn btn-sm" onClick="{{ up.addLine }}">+ Add item</button></div>
+<p class="muted" style="margin: 0; font-size: 12px">Make items go to the production queue. Buy-in items are bought from the market and shipped with the order.</p>
 <h3 style="margin: 0; font-size: 14px">Step 3 · Production details for the chart</h3>
 <p class="muted" style="margin: 0; font-size: 13px">Filled from the lead's customisation. These go on the production chart that is printed for the factory floor as soon as you save.</p>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px">
@@ -553,19 +567,19 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </section>
 </div></div>
 </sc-if>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{ orderFilters }}" as="f" hint-placeholder-count="4"><button style="{{ f.style }}" onClick="{{ f.pick }}">{{ f.label }}</button></sc-for></div>
 <div class="card" style="padding: 0; overflow-x: auto">
 <div style="min-width: 960px">
-<div class="th" style="grid-template-columns: 100px minmax(180px, 2fr) 120px 120px minmax(150px, 1.4fr) 90px 100px 140px"><span>PO</span><span>Customer</span><span>PO date</span><span>Deliver by</span><span>Lines</span><span>Queue</span><span>Reminders</span><span>Status</span></div>
+<div class="th" style="grid-template-columns: 100px minmax(180px, 1.6fr) 130px minmax(200px, 2fr) 170px 110px"><span>PO</span><span>Customer</span><span>Deliver by</span><span>Items</span><span>Status</span><span>Reminders</span></div>
+<sc-if value="{{ noOrderRows }}" hint-placeholder-val="{{ false }}"><p class="muted" style="margin: 0; padding: 14px 16px; font-size: 14px">No orders with this status.</p></sc-if>
 <sc-for list="{{ orderRows }}" as="o" hint-placeholder-count="5">
-<div class="tr" style="grid-template-columns: 100px minmax(180px, 2fr) 120px 120px minmax(150px, 1.4fr) 90px 100px 140px">
+<div class="tr" style="grid-template-columns: 100px minmax(180px, 1.6fr) 130px minmax(200px, 2fr) 170px 110px">
 <button class="linkbtn" onClick="{{ o.open }}">{{ o.id }}</button>
-<div style="display: flex; flex-direction: column; gap: 2px"><sc-if value="{{ o.hasClient }}" hint-placeholder-val="{{ true }}"><button class="linkbtn" onClick="{{ o.openClient }}">{{ o.customer }}</button></sc-if><sc-if value="{{ o.noClient }}" hint-placeholder-val="{{ false }}"><span>{{ o.customer }}</span></sc-if><span class="muted" style="font-size: 13px">{{ o.plant }}</span></div>
-<span>{{ o.date }}</span>
-<span>{{ o.deliver }}</span>
-<span class="muted" style="font-size: 13px">{{ o.linesText }}</span>
-<span>{{ o.posText }}</span>
+<div style="display: flex; flex-direction: column; gap: 2px"><sc-if value="{{ o.hasClient }}" hint-placeholder-val="{{ true }}"><button class="linkbtn" onClick="{{ o.openClient }}">{{ o.customer }}</button></sc-if><sc-if value="{{ o.noClient }}" hint-placeholder-val="{{ false }}"><span>{{ o.customer }}</span></sc-if><span class="muted" style="font-size: 13px">{{ o.plant }} · PO date {{ o.date }}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span>{{ o.deliver }}</span><span style="{{ o.daysStyle }}">{{ o.daysText }}</span></div>
+<span class="muted" style="font-size: 13px">{{ o.itemsText }}</span>
+<span><span style="{{ o.pillStyle }}">{{ o.stageText }}</span></span>
 <span style="{{ o.remStyle }}">{{ o.remText }}</span>
-<span><span style="{{ o.pillStyle }}">{{ o.prod }}</span></span>
 </div>
 </sc-for>
 </div>
@@ -575,18 +589,44 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
 <sc-if value="{{ isPo }}" hint-placeholder-val="{{ false }}">
 <div style="display: flex; flex-direction: column; gap: 16px">
-<div class="noprint" style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn btn-sm" onClick="{{ go.orders }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>All orders</button><sc-if value="{{ po.hasLead }}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm" onClick="{{ po.openLead }}">Open client: {{ po.leadName }}</button></sc-if><button class="btn btn-primary btn-sm" onClick="{{ go.production }}">Go to Production queue</button></div>
-<section class="card noprint" style="display: flex; flex-direction: column; gap: 12px">
+<div class="noprint"><button class="btn btn-sm" onClick="{{ go.orders }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>All orders</button></div>
+<section class="card noprint" style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start">
+<div style="display: flex; flex-direction: column; gap: 6px">
 <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap"><h1 style="margin: 0; font-size: 24px">{{ po.id }} · {{ po.customer }}</h1><span style="{{ po.pillStyle }}">{{ po.prod }}</span></div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px">
+<span class="muted" style="font-size: 14px">Customer PO {{ po.custPoText }} · {{ po.plant }} · Handled by {{ po.handler }}</span>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+<sc-if value="{{ po.hasLead }}" hint-placeholder-val="{{ true }}"><button class="btn btn-sm" onClick="{{ po.openLead }}">Open client</button></sc-if>
+<sc-if value="{{ po.prodWaiting }}" hint-placeholder-val="{{ true }}"><button class="btn btn-primary btn-sm" onClick="{{ go.production }}">Go to Production queue · {{ po.posShort }}</button></sc-if>
+<sc-if value="{{ po.prodStarted }}" hint-placeholder-val="{{ false }}"><span role="status" style="{{ po.prodChip }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ po.prodChipText }}</span></sc-if>
+<sc-if value="{{ po.prodDone }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary btn-sm" onClick="{{ go.dispatch }}">Go to Dispatch</button></sc-if>
+</div>
+</div>
+<div aria-label="Order progress" style="display: flex; flex-wrap: wrap; gap: 8px 4px; align-items: center">
+<sc-for list="{{ po.steps }}" as="st" hint-placeholder-count="7"><div style="display: flex; align-items: center; gap: 6px"><span style="{{ st.dot }}"></span><span style="display: flex; flex-direction: column"><span style="{{ st.text }}">{{ st.label }}</span><span class="muted" style="font-size: 11px">{{ st.date }}</span></span><sc-if value="{{ st.arrow }}" hint-placeholder-val="{{ true }}"><span aria-hidden="true" style="color: #C9C9C1; padding: 0 6px">—</span></sc-if></div></sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 12px; font-size: 14px">
 <div><div class="lbl">PO date</div><div>{{ po.date }}</div></div>
-<div><div class="lbl">Deliver by</div><div>{{ po.deliver }}</div></div>
-<div><div class="lbl">Late penalty starts</div><div style="color: #B91C1C; font-weight: 600">{{ po.ldStart }}</div></div>
-<div><div class="lbl">Penalty terms</div><div>{{ po.ld }}</div></div>
-<div><div class="lbl">Order value</div><div>{{ po.value }}</div></div>
-<div><div class="lbl">Queue position</div><div>{{ po.posText }}</div></div>
+<div><div class="lbl">Deliver by</div><div><strong>{{ po.deliver }}</strong></div><div style="{{ po.daysStyle }}">{{ po.daysText }}</div></div>
+<div><div class="lbl">Late penalty starts</div><div style="color: #B91C1C; font-weight: 600">{{ po.ldStart }}</div><div class="muted" style="font-size: 13px">{{ po.ld }}</div></div>
+<div><div class="lbl">Payment terms</div><div>{{ po.termsText }}</div></div>
+<div><div class="lbl">Order value</div><div><strong>{{ po.value }}</strong></div></div>
+<div><div class="lbl">Production queue</div><div>{{ po.posText }}</div></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; font-size: 14px; border-top: 1px solid #EFEFEA; padding-top: 14px">
+<div><div class="lbl">Deliver to</div><div style="white-space: pre-line">{{ po.addrText }}</div></div>
+<div><div class="lbl">Invoice envelope to</div><div>{{ po.envText }}</div></div>
 </div>
 <div style="{{ po.readyBox }}">{{ po.readyText }}</div>
+</section>
+<section class="card noprint" style="padding: 0; overflow-x: auto">
+<div style="padding: 16px 16px 8px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline"><h2 style="margin: 0; font-size: 16px">Items</h2><span class="muted" style="font-size: 13px">{{ po.itemsSummary }}</span></div>
+<div style="min-width: 900px">
+<div class="th" style="grid-template-columns: minmax(180px, 2fr) 100px minmax(200px, 2fr) 100px 130px 150px"><span>Item</span><span>Type</span><span>Size-wise quantity</span><span>Total</span><span>Status</span><span></span></div>
+<sc-for list="{{ po.lines }}" as="ln" hint-placeholder-count="2"><div class="tr" style="grid-template-columns: minmax(180px, 2fr) 100px minmax(200px, 2fr) 100px 130px 150px"><div style="display: flex; flex-direction: column; gap: 2px"><strong>{{ ln.item }}</strong><span class="muted" style="font-size: 12px">{{ ln.note }}</span></div><span><span style="{{ ln.typePill }}">{{ ln.type }}</span></span><span style="font-size: 13px">{{ ln.breakdown }}</span><strong>{{ ln.total }}</strong><span><span style="{{ ln.statusPill }}">{{ ln.status }}</span></span><span><sc-if value="{{ ln.canAdvance }}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm" onClick="{{ ln.advance }}">Mark {{ ln.nextStatus }}</button></sc-if></span></div></sc-for>
+<div class="tr" style="grid-template-columns: minmax(180px, 2fr) 100px minmax(200px, 2fr) 100px 130px 150px; border-bottom: 0; font-weight: 700"><span>Total</span><span></span><span></span><span>{{ po.totalPcs }}</span><span></span><span></span></div>
+</div>
 </section>
 <sc-if value="{{ po.hasMake }}" hint-placeholder-val="{{ true }}">
 <section class="card" style="display: flex; flex-direction: column; gap: 12px">
@@ -618,12 +658,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </sc-if>
 </section>
 </sc-if>
-<section class="card noprint" style="padding: 0; overflow-x: auto">
-<div style="min-width: 850px">
-<div class="th" style="grid-template-columns: minmax(150px, 2fr) 130px 160px 100px 130px 150px"><span>Item</span><span>Sizes</span><span>Quantity</span><span>Type</span><span>Status</span><span></span></div>
-<sc-for list="{{ po.lines }}" as="ln" hint-placeholder-count="2"><div class="tr" style="grid-template-columns: minmax(150px, 2fr) 130px 160px 100px 130px 150px"><span>{{ ln.item }}</span><span>{{ ln.size }}</span><span>{{ ln.qty }}</span><span><span style="{{ ln.typePill }}">{{ ln.type }}</span></span><span><span style="{{ ln.statusPill }}">{{ ln.status }}</span></span><span><sc-if value="{{ ln.canAdvance }}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm" onClick="{{ ln.advance }}">Mark {{ ln.nextStatus }}</button></sc-if></span></div></sc-for>
-</div>
-</section>
 <section class="card noprint" style="display: flex; flex-direction: column; gap: 10px">
 <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap"><h2 style="margin: 0; font-size: 16px">Customer reminders</h2><button class="btn btn-sm" onClick="{{ toggleRem }}">Log a reminder</button></div>
 <p class="muted" style="margin: 0; font-size: 13px">Each time the customer chases this order, log it here. The count shows in Orders and the Production queue, so urgency is visible when a priority change is requested.</p>
@@ -644,6 +678,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <sc-for list="{{ po.remList }}" as="r" hint-placeholder-count="2"><div style="border-top: 1px solid #EFEFEA; padding-top: 8px; font-size: 14px"><strong>Reminder {{ r.n }}</strong> <span class="muted">· {{ r.date }} · {{ r.via }}{{ r.by }}</span><div>{{ r.note }}</div><sc-if value="{{ r.hasFile }}" hint-placeholder-val="{{ false }}"><div class="muted" style="font-size: 13px">Attached: {{ r.file }}</div></sc-if></div></sc-for>
 <sc-if value="{{ po.canRequest }}" hint-placeholder-val="{{ false }}"><div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; padding: 10px 12px; border-radius: 8px; background: #FBF1DF; color: #8A4B05"><span>{{ po.remHint }}</span><button class="btn btn-sm" onClick="{{ go.production }}">Request higher priority</button></div></sc-if>
 </section>
+<section class="card noprint" style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px">PO history</h2>
+<p class="muted" style="margin: 0; font-size: 13px">Everything that happened to this order, newest first.</p>
+<sc-for list="{{ po.history }}" as="h" hint-placeholder-count="3"><div style="display: flex; gap: 12px; border-top: 1px solid #EFEFEA; padding-top: 8px; font-size: 14px"><span class="muted" style="width: 100px; flex: none">{{ h.date }}</span><div style="display: flex; flex-direction: column; gap: 2px"><strong>{{ h.title }}</strong><span class="muted" style="font-size: 13px">{{ h.detail }}</span></div></div></sc-for>
 </div>
 </sc-if>
 
@@ -875,7 +913,7 @@ class Component extends DCLogic {
       chColour: 'Fluorescent yellow', chLogo: 'Screen print', chTape: '3M Scotchlite 50 mm', chZip: 'YKK zipper', chNotes: '', chartOpen: false, lastUp: '',
       remOpen: false, remVia: 'Email (PDF uploaded)', remNote: '', remFile: '',
       docOpen: false, docType: 'Quotation', docFile: '', docNote: '', docAdmin: false,
-      reqFor: '', reqReason: '', openShip: 'S1', prodFocus: '', remFilter: 'All',
+      reqFor: '', reqReason: '', openShip: 'S1', prodFocus: '', remFilter: 'All', orderFilter: 'All', upF: {}, upLines: null,
       packFor: '', pkAddr: '', pkEnv: '', pkBoxes: [], pkInv: '', pkCarrier: 'TCI', pkLr: '', pkExp: '', pkPhoto: false, pkErr: '', dispatchMsg: '', pkA: {}, pkBookIdx: -1, pkSaveAddr: true, viewLabels: '',
       leads: [
         { id: 'L9', name: 'Indus Highways Ltd', plant: 'NH-48 Jaipur package', industry: 'Road construction', product: 'Reflective Safety Jacket', sizes: 'M, L, XL', custom: 'Embroidery logo, fluorescent yellow, 3M Scotchlite tape, transparent ID pocket', qty: '1,800', price: '₹236', owner: 'Rohit', source: 'Website form', stage: 'Won', follow: 'Closed', due: false, lostReason: '', pos: ['PO-4352'], addresses: [{ label: 'Jaipur site office', name: 'L. Agarwal (Purchase Manager)', company: 'Indus Highways Ltd', line1: 'NH-48 Project Site Office, Km 212', line2: 'Near Shahpura toll plaza', city: 'Jaipur', state: 'Rajasthan', pin: '303103', phone: '0142 222 0000' }],
@@ -1105,6 +1143,10 @@ class Component extends DCLogic {
     const stdOf = (p) => { const a = []; if (/(^|, )FR /.test(p)) a.push('IS 15748:2022 (BIS)'); if (/Reflective (Safety Jacket|Vest)|Auto-Glow|LED/.test(p)) a.push('IS 15809:2017 (BIS) · EN ISO 20471'); if (/tape/i.test(p)) a.push('3M Scotchlite'); return a.length ? a.join(' · ') : 'As agreed with customer'; };
     const digits = (t) => String(t || '').replace(/[^0-9]/g, '');
     const closeAll = () => this.setState({ newLeadOpen: false, lostOpen: false, docOpen: false, aiOpen: false, actOpen: false, contactOpen: false, docView: '', remOpen: false, reqFor: '', uploadOpen: false, notifOpen: false });
+    const dayNo = (t) => { const q = String(t).split(' '); const d = new Date(Number(q[2]), MON.indexOf(q[1]), Number(q[0])); return isNaN(d) ? NaN : Math.round(d.getTime() / 86400000); };
+    const daysLeft = (t) => { const n = dayNo(t) - dayNo('25 Nov 2026'); if (isNaN(n)) return { text: '', style: '' }; return n < 0 ? { text: 'Late by ' + (-n) + ' day' + (n === -1 ? '' : 's'), style: 'font-size: 13px; color: #B91C1C; font-weight: 600' } : n === 0 ? { text: 'Due today', style: 'font-size: 13px; color: #B91C1C; font-weight: 600' } : { text: n + ' day' + (n === 1 ? '' : 's') + ' left', style: 'font-size: 13px; ' + (n <= 7 ? 'color: #B45309; font-weight: 600' : 'color: #5D6470') }; };
+    const sumQty = (q) => String(q).split('/').reduce((t, x) => t + (Number(String(x).replace(/[^0-9]/g, '')) || 0), 0);
+    const breakdownOf = (ln) => { const sz = String(ln.size).split(' / '); const qt = String(ln.qty).split(' / '); return sz.length === qt.length && sz.length > 1 ? sz.map((z, i) => z + ': ' + qt[i]).join(' · ') : (ln.size === 'Free size' ? 'Free size' : 'Size ' + ln.size) + ': ' + ln.qty; };
     const PRODUCTS = ['Reflective Safety Jacket', 'Hi-Vis Reflective Vest', 'LED Reflective Safety Jacket', 'Auto-Glow Reflective Safety Jacket', 'FR Coverall', 'FR Jacket', 'FR Trousers', 'FR Hood', '3M Scotchlite reflective tape', 'Safety helmet', 'Safety gloves', 'Safety shoes'];
     const addOther = () => {
       const v = (this.state.nlOther || '').trim();
@@ -1254,11 +1296,17 @@ class Component extends DCLogic {
     const pendingFor = (id) => s.requests.some((r) => r.po === id && r.status === 'Pending');
     const prodKind = (p) => (p === 'In production' ? 'blue' : p === 'Ready for packing' ? 'green' : 'neutral');
     const makeText = (o) => o.lines.filter((x) => x.type === 'Make').map((x) => x.item + ' ' + x.qty).join(', ');
-    const orderRows = s.orders.map((o) => {
+    const stageOf = (o) => (o.prod === 'In production' ? 'In production' : o.prod === 'Ready for packing' ? (o.lines.every((x) => ['Ready', 'Received'].indexOf(x.status) >= 0) ? 'Ready to dispatch' : 'Waiting for bought-in') : 'Waiting');
+    const orderFilterList = ['All', 'Waiting', 'In production', 'Ready to dispatch'];
+    const orderRowsAll = s.orders.map((o) => {
       const mk = o.lines.filter((x) => x.type === 'Make').length;
       const bi = o.lines.length - mk;
       const rc = o.reminders.length;
+      const dl = daysLeft(o.deliver); const stg = stageOf(o); const pos0 = posOf(o.id);
       return Object.assign({}, o, {
+        daysText: dl.text, daysStyle: dl.style, stage: stg,
+        stageText: stg === 'Waiting' ? 'Waiting · #' + pos0 + ' in queue' : stg,
+        itemsText: o.lines.map((x) => x.item + ' × ' + sumQty(x.qty).toLocaleString('en-IN') + (x.type === 'Buy-in' ? ' (buy-in)' : '')).join(', '),
         inQueue: posOf(o.id) > 0, notInQueue: !(posOf(o.id) > 0), queueAria: 'See ' + o.id + ' in the production queue', goProd: () => this.setState({ screen: 'production', prodFocus: o.id, reqFor: '' }),
         pos: posOf(o.id), posText: posOf(o.id) ? '#' + posOf(o.id) : 'Made items done', pillStyle: pill(prodKind(o.prod)),
         linesText: mk + ' made' + (bi ? ' · ' + bi + ' bought in' : ''),
@@ -1269,6 +1317,7 @@ class Component extends DCLogic {
         openClient: () => { const c = s.leads.find((l) => (l.pos || []).indexOf(o.id) >= 0); if (c) this.setState({ screen: 'lead', leadId: c.id, leadPoSel: o.id }); }
       });
     });
+    const orderRows = orderRowsAll.filter((o) => (s.orderFilter || 'All') === 'All' || o.stage === s.orderFilter || (s.orderFilter === 'Ready to dispatch' && o.stage === 'Waiting for bought-in'));
 
     const P0 = ordersById[s.poId] || s.orders[0];
     const readyLines = P0.lines.filter((x) => x.status === 'Received' || x.status === 'Ready').length;
@@ -1286,12 +1335,40 @@ class Component extends DCLogic {
     const po = Object.assign({}, P0, {
       prodBtn: posOf(P0.id) > 0 ? 'See in production queue' : P0.prod === 'Ready for packing' ? 'See in dispatch' : 'See in production queue',
       goProd: () => this.setState(posOf(P0.id) > 0 ? { screen: 'production', prodFocus: P0.id, reqFor: '' } : { screen: 'dispatch', prodFocus: '' }),
+      custPoText: P0.custPo || 'not recorded', handler: poLead ? poLead.owner : 'Not set', termsText: P0.terms || '30 days after delivery',
+      prodWaiting: P0.prod === 'Waiting' && posOf(P0.id) > 0, prodStarted: P0.prod === 'In production' || P0.prod === 'Ready for packing', prodDone: P0.prod === 'Ready for packing',
+      prodChipText: P0.prod === 'In production' ? 'Added to production · being made now' : 'Production done',
+      prodChip: 'display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; background: #E7F4EC; color: #15803D; border: 1px solid #A7D7B8',
+      posShort: posOf(P0.id) ? '#' + posOf(P0.id) + ' of ' + s.queue.length : '',
+      daysText: daysLeft(P0.deliver).text, daysStyle: daysLeft(P0.deliver).style,
+      addrText: (function () { const bk = poLead && poLead.addresses && poLead.addresses[0]; if (bk) return [bk.name, bk.company, [bk.line1, bk.line2].filter(Boolean).join(', '), bk.city + (bk.pin ? ' - ' + bk.pin : '')].join('\n'); return P0.addr || ('Stores, ' + P0.customer + '\n' + P0.plant); })() + '\n(confirmed at packing)',
+      envText: P0.env || ('Purchase Manager, ' + P0.customer),
+      itemsSummary: P0.lines.length + ' item' + (P0.lines.length === 1 ? '' : 's') + ' · ' + P0.lines.filter((x) => x.type === 'Make').length + ' to make, ' + P0.lines.filter((x) => x.type === 'Buy-in').length + ' to buy in',
+      totalPcs: P0.lines.reduce((t, x) => t + sumQty(x.qty), 0).toLocaleString('en-IN') + ' units',
+      steps: (function () {
+        const labels = ['PO received', 'In queue', 'In production', 'Ready to pack', 'Dispatched', 'Delivered', 'Paid'];
+        const cur = P0.prod === 'In production' ? 2 : P0.prod === 'Ready for packing' ? 3 : 1;
+        const dates = [P0.date, P0.date, P0.prod === 'In production' ? 'now' : '', P0.prodDone || '', '', '', ''];
+        return labels.map((lb, i) => ({ label: lb, date: i <= cur ? dates[i] : '', arrow: i < labels.length - 1,
+          dot: 'width: 10px; height: 10px; border-radius: 50%; flex: none; ' + (i < cur ? 'background: #15803D' : i === cur ? 'background: #C2410C; box-shadow: 0 0 0 4px #FDEEE6' : 'background: #D6D6CF'),
+          text: 'font-size: 13px; ' + (i === cur ? 'font-weight: 700; color: #1B1E23' : i < cur ? 'color: #1B1E23' : 'color: #5D6470') }));
+      })(),
+      history: (function () {
+        const h = [];
+        h.push({ date: P0.date, title: 'PO received and added to the production queue', detail: (P0.custPo ? 'Customer PO ' + P0.custPo + ' · ' : '') + 'production chart created' });
+        P0.reminders.forEach((r, i) => h.push({ date: r.date, title: 'Customer reminder ' + (i + 1), detail: r.via + ': ' + r.note + (r.by ? ' · logged by ' + r.by : '') }));
+        s.requests.filter((r) => r.po === P0.id).forEach((r) => h.push({ date: '25 Nov 2026', title: 'Priority request · ' + r.status, detail: 'Asked by ' + r.by + ': ' + r.reason }));
+        s.log.filter((g) => g.text.indexOf(P0.id) >= 0 && !/ added at position /.test(g.text)).forEach((g) => { const m = g.detail.match(/(\d{1,2} [A-Z][a-z]{2} \d{4})/); h.push({ date: m ? m[1] : '', title: g.text, detail: g.detail.replace(/ · \d{1,2} [A-Z][a-z]{2} \d{4}$/, '') }); });
+        if (P0.prodDone) h.push({ date: P0.prodDone, title: 'Production done', detail: 'Made items ready for packing' });
+        return h.sort((x, y) => (dayNo(y.date) || 99999999) - (dayNo(x.date) || 99999999));
+      })(),
       hasMake: chRows.length > 0, chartBtn: s.chartOpen ? 'Hide chart' : 'Show production chart',
       chart: { colour: CH.colour, logo: CH.logo, tape: CH.tape, zip: CH.zip, notes: CH.notes || 'None', custPo: P0.custPo || 'As per PO', target: minusDays(P0.deliver, 5), rows: chRows, total: chTotal.toLocaleString('en-IN') },
       remHint: 'The customer has reminded ' + P0.reminders.length + ' time' + (P0.reminders.length > 1 ? 's' : '') + '. If it cannot wait for its turn, ask the admin to move it up.',
       hasLead: !!poLead, leadName: poLead ? poLead.name : '', openLead: poLead ? openLead(poLead) : () => {},
       pos: posOf(P0.id), posText: posOf(P0.id) ? '#' + posOf(P0.id) + ' of ' + s.queue.length : 'Out of the queue (made items done)', pillStyle: pill(prodKind(P0.prod)),
       lines: P0.lines.map((x, li) => Object.assign({}, x, {
+        breakdown: breakdownOf(x), total: sumQty(x.qty).toLocaleString('en-IN'), note: x.type === 'Make' ? stdOf(x.item) : 'Bought from the market',
         canAdvance: x.type === 'Buy-in' && !!NEXT[x.status], nextStatus: (NEXT[x.status] || '').toLowerCase(),
         advance: () => this.setState({ orders: s.orders.map((o) => (o.id === P0.id ? Object.assign({}, o, { lines: o.lines.map((y, yi) => (yi === li ? Object.assign({}, y, { status: NEXT[y.status] }) : y)) }) : o)) }),
         typePill: pill(x.type === 'Make' ? 'accent' : 'blue'),
@@ -1506,6 +1583,19 @@ class Component extends DCLogic {
       { k: 'Payment terms', v: '30 days after delivery' },
       { k: 'Delivery address', v: 'Stores, ' + PDF.name + ', ' + PDF.plant }
     ];
+    const UF = s.upF || {};
+    const UL = s.upLines || [{ item: 'Reflective Safety Jacket', size: 'M / L / XL', qty: '200 / 300 / 100', type: 'Make' }, { item: 'Safety gloves', size: '9', qty: '600', type: 'Buy-in' }];
+    const tStyle = (on) => 'font: inherit; font-size: 13px; font-weight: 600; min-height: 36px; padding: 0 10px; border-radius: 8px; cursor: pointer; ' + (on ? 'background: #1B1E23; color: #FFFFFF; border: 1px solid #1B1E23' : 'background: #FFFFFF; color: #1B1E23; border: 1px solid #D6D6CF');
+    const setUL = (i, patch) => this.setState({ upLines: UL.map((x, j) => (j === i ? Object.assign({}, x, patch) : x)) });
+    const up = { customer: PDF.name + ', ' + PDF.plant, custPo: UF.custPo !== undefined ? UF.custPo : pdfCustPo, date: UF.date || '2026-11-25', deliver: UF.deliver || '2026-12-26',
+      ld: UF.ld !== undefined ? UF.ld : '0.5% per week after delivery date, max 5%', terms: UF.terms !== undefined ? UF.terms : '30 days after delivery',
+      set: ['custPo', 'date', 'deliver', 'ld', 'terms'].reduce((m, k) => { m[k] = (e) => this.setState({ upF: Object.assign({}, UF, { [k]: e.target.value }) }); return m; }, {}),
+      addLine: () => this.setState({ upLines: UL.concat([{ item: '', size: '', qty: '', type: 'Make' }]) }),
+      lines: UL.map((x, i) => Object.assign({}, x, { n: i + 1, iid: 'up-i' + i, sid: 'up-s' + i, qid: 'up-q' + i, typeAria: 'Item ' + (i + 1) + ' made or bought in', removeAria: 'Remove item ' + (i + 1),
+        isMake: x.type === 'Make' ? 'true' : 'false', isBuy: x.type === 'Buy-in' ? 'true' : 'false', makeStyle: tStyle(x.type === 'Make'), buyStyle: tStyle(x.type === 'Buy-in'),
+        setMake: () => setUL(i, { type: 'Make' }), setBuy: () => setUL(i, { type: 'Buy-in' }), canRemove: UL.length > 1,
+        remove: () => this.setState({ upLines: UL.filter((y, j) => j !== i) }),
+        set: ['item', 'size', 'qty'].reduce((m, k) => { m[k] = (e) => setUL(i, { [k]: e.target.value }); return m; }, {}) })) };
     const upRec = s.leads.find((l) => l.id === s.upLead);
     const upIsRepeat = !!upRec && isClient(upRec) && s.upRepeat;
     const activeLeads = visibleLeads.filter((l) => isOpenStage(l.stage) && !isClient(l));
@@ -1648,7 +1738,7 @@ class Component extends DCLogic {
       },
 
       clientRows: clientRows, clientsSub: (admin ? 'Every client. ' : 'Your clients only. ') + clientRows.length + ' in total. A lead becomes a client when its first PO arrives; its full history from the first contact to the last payment stays here.',
-      j: j, openUpload: () => this.setState(Object.assign({ screen: 'orders', uploadOpen: true, uploadDone: false, upLead: L.id, pdfLead: L.id, upErr: '', upRepeat: isClient(L), upDdOpen: false }, chartFrom(L.custom))),
+      j: j, openUpload: () => this.setState(Object.assign({ screen: 'orders', upF: {}, upLines: null, uploadOpen: true, uploadDone: false, upLead: L.id, pdfLead: L.id, upErr: '', upRepeat: isClient(L), upDdOpen: false }, chartFrom(L.custom))),
       docOpen: s.docOpen, docType: s.docType, docNote: s.docNote, docAdmin: s.docAdmin,
       toggleDoc: () => this.setState({ docOpen: !s.docOpen, docFile: '', docNote: '', docAdmin: false }),
       setDocType: (e) => this.setState({ docType: e.target.value, docAdmin: e.target.value === 'Cost sheet' }),
@@ -1664,27 +1754,34 @@ class Component extends DCLogic {
         this.updateLead(L.id, (l) => Object.assign({}, l, { docs: [nd].concat(l.docs), activity: [{ date: '25 Nov 2026', type: 'Document uploaded', by: me, note: nd.name + ' (' + file + ')' + (nd.note ? ': ' + nd.note : '') + (nd.adminOnly ? ' · admins only' : ''), next: '' }].concat(l.activity) }));
         this.setState({ docOpen: false, docFile: '', docNote: '', docAdmin: false });
       },
-      orderRows: orderRows, po: po, queueLen: s.queue.length,
+      orderRows: orderRows, noOrderRows: orderRows.length === 0,
+      orderFilters: orderFilterList.map((f) => ({ label: f + ' (' + orderRowsAll.filter((o) => f === 'All' || o.stage === f || (f === 'Ready to dispatch' && o.stage === 'Waiting for bought-in')).length + ')', style: chip((s.orderFilter || 'All') === f), pick: () => this.setState({ orderFilter: f }) })),
+      po: po, queueLen: s.queue.length,
       uploadOpen: s.uploadOpen, uploadDone: s.uploadDone, aiFields: aiFields, aiLines: aiLines,
-      toggleUpload: () => this.setState(Object.assign({ uploadOpen: !s.uploadOpen, uploadDone: false, upErr: '', pdfLead: 'L8', upRepeat: false, upDdOpen: false, upLead: activeLeads.some((l) => l.id === 'L8') ? 'L8' : '' }, chartFrom(activeLeads.some((l) => l.id === 'L8') ? (s.leads.find((l) => l.id === 'L8') || {}).custom : ''))),
+      toggleUpload: () => this.setState(Object.assign({ upF: {}, upLines: null, uploadOpen: !s.uploadOpen, uploadDone: false, upErr: '', pdfLead: 'L8', upRepeat: false, upDdOpen: false, upLead: activeLeads.some((l) => l.id === 'L8') ? 'L8' : '' }, chartFrom(activeLeads.some((l) => l.id === 'L8') ? (s.leads.find((l) => l.id === 'L8') || {}).custom : ''))),
       upIsRepeat: upIsRepeat, upNotRepeat: !upIsRepeat, upRepeatName: upRec ? upRec.name : '', upNoOpts: upLeadOpts.length === 0,
       upDdOpen: !!s.upDdOpen, upDdExpanded: s.upDdOpen ? 'true' : 'false', toggleDd: () => this.setState({ upDdOpen: !s.upDdOpen }),
       upDdLabel: upTarget && !upIsRepeat ? upTarget.name + ' · ' + upTarget.plant + ' · ' + upTarget.stage : 'Choose an active lead', upDdLabelStyle: upTarget ? 'color: #1B1E23; font-weight: 600' : 'color: #5D6470',
-      pdfFile: pdfFile, upLeadOpts: upLeadOpts, upScope: admin ? 'all' : 'your', upHasMatch: !!upTarget, upMatchText: upMatchText, upMatchStyle: upMatchStyle,
+      up: up, pdfFile: pdfFile, upLeadOpts: upLeadOpts, upScope: admin ? 'all' : 'your', upHasMatch: !!upTarget, upMatchText: upMatchText, upMatchStyle: upMatchStyle,
       upHasErr: !!s.upErr, upErr: s.upErr, uploadMsg: s.uploadMsg, upSaveLabel: upTarget ? 'Save PO under ' + upTarget.name : 'Save PO',
       openUpLead: () => { const t = s.leads.find((l) => l.id === s.upLead); if (t) this.setState({ screen: 'lead', leadId: t.id, leadPoSel: '' }); },
       saveUpload: () => {
         if (!upTarget) { this.setState({ upErr: 'Choose the lead this PO belongs to first.' }); return; }
+        const goodLines = UL.filter((x) => (x.item || '').trim() && sumQty(x.qty) > 0);
+        if (!goodLines.length) { this.setState({ upErr: 'Add at least one item with a quantity.' }); return; }
+        if (!String(up.custPo).trim()) { this.setState({ upErr: 'Enter the customer PO number.' }); return; }
         const newId = 'PO-' + (4480 + s.uploadCount);
         const isWC = upTarget.id === 'L8';
         const o = { id: newId, chart: { colour: s.chColour, logo: s.chLogo, tape: s.chTape, zip: s.chZip, notes: s.chNotes.trim() }, custPo: pdfCustPo, addr: isWC ? 'Stores In-charge\nWestern Cement Ltd, Kota plant\nKota, Rajasthan' : 'Stores\n' + upTarget.name + '\n' + upTarget.plant, env: 'Purchase Manager, ' + upTarget.name, city: isWC ? 'Kota' : upTarget.plant, customer: upTarget.name, plant: upTarget.plant, date: '25 Nov 2026', deliver: '26 Dec 2026', ldStart: '27 Dec 2026', ld: '0.5% per week, max 5%', value: '₹1,35,000', prod: 'Waiting',
           lines: [{ item: 'Reflective Safety Jacket', size: 'M / L / XL', qty: '200 / 300 / 100', type: 'Make', status: 'Waiting' }, { item: 'Safety gloves', size: '9', qty: '600', type: 'Buy-in', status: 'To buy' }], reminders: [] };
+        Object.assign(o, { custPo: String(up.custPo).trim(), date: this.fmt(up.date), deliver: this.fmt(up.deliver), ldStart: minusDays(this.fmt(up.deliver), -1), ld: up.ld, terms: up.terms,
+          lines: goodLines.map((x) => ({ item: x.item.trim(), size: (x.size || '').trim() || 'Free size', qty: x.qty.trim(), type: x.type, status: x.type === 'Make' ? 'Waiting' : 'To buy' })) });
         const repeat = isClient(upTarget);
         this.setState({ orders: s.orders.concat([o]), queue: s.queue.concat([newId]), uploadOpen: false, uploadDone: true, upRepeat: false, lastUp: newId, chartOpen: true, uploadCount: s.uploadCount + 1, upErr: '', leadPoSel: newId,
           uploadMsg: newId + (repeat ? ' saved for the client ' : ' saved under the lead ') + upTarget.name + (repeat ? ' (repeat order)' : '. The lead has moved from Leads to Clients') + '. A production queue entry was created at position ' + (s.queue.length + 1) + ' and its production chart is ready to print.',
           leads: s.leads.map((l) => (l.id === upTarget.id ? Object.assign({}, l, { stage: 'Won', pos: (l.pos || []).concat([newId]), follow: 'Closed', due: false,
-            docs: [{ name: 'Customer PO ' + pdfCustPo, kind: 'Customer PO', type: 'PDF · ' + pdfFile, date: '25 Nov 2026', by: me, adminOnly: false }].concat(l.docs),
-            activity: [{ date: '25 Nov 2026', type: 'PO received', by: me, note: 'Customer PO ' + pdfCustPo + ' uploaded as ' + newId + (repeat ? ' (repeat order).' : '. Lead became a client.'), next: '' }].concat(l.activity) }) : l)),
+            docs: [{ name: 'Customer PO ' + o.custPo, kind: 'Customer PO', type: 'PDF · ' + pdfFile, date: '25 Nov 2026', by: me, adminOnly: false }].concat(l.docs),
+            activity: [{ date: '25 Nov 2026', type: 'PO received', by: me, note: 'Customer PO ' + o.custPo + ' uploaded as ' + newId + (repeat ? ' (repeat order).' : '. Lead became a client.'), next: '' }].concat(l.activity) }) : l)),
           log: [{ text: newId + ' added at position ' + (s.queue.length + 1), detail: 'Uploaded by ' + me + ' for ' + upTarget.name + ' · 25 Nov 2026' }].concat(s.log) });
       },
       ch: { colour: s.chColour, logo: s.chLogo, tape: s.chTape, zip: s.chZip, notes: s.chNotes,

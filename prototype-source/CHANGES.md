@@ -10,3 +10,9 @@ Source of the prototype (Design canvas format). `index.html` on this branch is s
 - Documents have View (preview popup) and Download buttons. In the prototype the download is a sample text file.
 - Requirement card lists each product line separately with its standard.
 - Notification bell in the header: follow-ups due, priority requests, late-penalty dates within 7 days, new customer reminders, overdue shipments and payments over 45 days, with unread count and Mark all as read.
+
+## PO changes
+- PO page redesigned: header with customer PO, plant and handler; progress line (PO received → In queue → In production → Ready to pack → Dispatched → Delivered → Paid); key dates with days left; payment terms; delivery address and invoice envelope; items with size-wise quantities and totals; production chart; customer reminders; PO history.
+- Production button: "Go to Production queue · #3 of 5" while the order waits. Once it starts, a green "Added to production · being made now" status replaces it. When made items are done, it shows "Production done" and a "Go to Dispatch" button.
+- Orders list: deliver-by with days left, item summary, clear status, reminders, and filters (All, Waiting, In production, Ready to dispatch) with counts.
+- New order (upload PO): the AI-read fields and item lines are editable (customer PO number, dates, penalty, payment terms; item, sizes, quantity per size, Make or Buy-in; add or remove items), with checks before saving.
