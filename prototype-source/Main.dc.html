@@ -554,6 +554,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <div><button type="button" class="btn btn-sm" onClick="{{ up.addLine }}">+ Add item</button></div>
 <p class="muted" style="margin: 0; font-size: 12px">Make items go to the production queue. Buy-in items are bought from the market and shipped with the order.</p>
 <h3 style="margin: 0; font-size: 14px">Step 3 · Production details for the chart</h3>
+<label style="display: flex; gap: 8px; align-items: center; font-size: 14px"><input type="checkbox" checked="{{ upQueueNow }}" onChange="{{ setUpQueueNow }}">Add to the production queue now (untick if something is still pending, such as artwork)</label>
 <p class="muted" style="margin: 0; font-size: 13px">Filled from the lead's customisation. These go on the production chart that is printed for the factory floor as soon as you save.</p>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px">
 <div><label class="lbl" for="ch-colour">Colour</label><select id="ch-colour" class="field" value="{{ ch.colour }}" onChange="{{ ch.setColour }}"><option>Fluorescent yellow</option><option>Fluorescent orange</option><option>Navy</option><option>Red</option><option>Customer colour (see notes)</option></select></div>
@@ -598,6 +599,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </div>
 <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
 <sc-if value="{{ po.hasLead }}" hint-placeholder-val="{{ true }}"><button class="btn btn-sm" onClick="{{ po.openLead }}">Open client</button></sc-if>
+<sc-if value="{{ po.notQueued }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary btn-sm" onClick="{{ po.addToQueue }}">Add to production queue</button></sc-if>
 <sc-if value="{{ po.prodWaiting }}" hint-placeholder-val="{{ true }}"><button class="btn btn-primary btn-sm" onClick="{{ go.production }}">Go to Production queue · {{ po.posShort }}</button></sc-if>
 <sc-if value="{{ po.prodStarted }}" hint-placeholder-val="{{ false }}"><span role="status" style="{{ po.prodChip }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ po.prodChipText }}</span></sc-if>
 <sc-if value="{{ po.prodDone }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary btn-sm" onClick="{{ go.dispatch }}">Go to Dispatch</button></sc-if>
@@ -618,6 +620,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <div><div class="lbl">Deliver to</div><div style="white-space: pre-line">{{ po.addrText }}</div></div>
 <div><div class="lbl">Invoice envelope to</div><div>{{ po.envText }}</div></div>
 </div>
+<sc-if value="{{ po.notQueued }}" hint-placeholder-val="{{ false }}"><div role="status" style="font-size: 14px; padding: 10px 12px; border-radius: 8px; background: #FBF1DF; color: #8A4B05"><strong>Not in the production queue yet.</strong> {{ po.holdText }} When it is ready, click Add to production queue. It joins at the end of the queue.</div></sc-if>
 <div style="{{ po.readyBox }}">{{ po.readyText }}</div>
 </section>
 <section class="card noprint" style="padding: 0; overflow-x: auto">
@@ -916,7 +919,7 @@ class Component extends DCLogic {
       reqFor: '', reqReason: '', openShip: 'S1', prodFocus: '', remFilter: 'All', orderFilter: 'All', upF: {}, upLines: null,
       packFor: '', pkAddr: '', pkEnv: '', pkBoxes: [], pkInv: '', pkCarrier: 'TCI', pkLr: '', pkExp: '', pkPhoto: false, pkErr: '', dispatchMsg: '', pkA: {}, pkBookIdx: -1, pkSaveAddr: true, viewLabels: '',
       leads: [
-        { id: 'L9', name: 'Indus Highways Ltd', plant: 'NH-48 Jaipur package', industry: 'Road construction', product: 'Reflective Safety Jacket', sizes: 'M, L, XL', custom: 'Embroidery logo, fluorescent yellow, 3M Scotchlite tape, transparent ID pocket', qty: '1,800', price: '₹236', owner: 'Rohit', source: 'Website form', stage: 'Won', follow: 'Closed', due: false, lostReason: '', pos: ['PO-4352'], addresses: [{ label: 'Jaipur site office', name: 'L. Agarwal (Purchase Manager)', company: 'Indus Highways Ltd', line1: 'NH-48 Project Site Office, Km 212', line2: 'Near Shahpura toll plaza', city: 'Jaipur', state: 'Rajasthan', pin: '303103', phone: '0142 222 0000' }],
+        { id: 'L9', name: 'Indus Highways Ltd', plant: 'NH-48 Jaipur package', industry: 'Road construction', product: 'Reflective Safety Jacket', sizes: 'M, L, XL', custom: 'Embroidery logo, fluorescent yellow, 3M Scotchlite tape, transparent ID pocket', qty: '1,800', price: '₹236', owner: 'Rohit', source: 'Website form', stage: 'Won', follow: 'Closed', due: false, lostReason: '', pos: ['PO-4352', 'PO-4477'], addresses: [{ label: 'Jaipur site office', name: 'L. Agarwal (Purchase Manager)', company: 'Indus Highways Ltd', line1: 'NH-48 Project Site Office, Km 212', line2: 'Near Shahpura toll plaza', city: 'Jaipur', state: 'Rajasthan', pin: '303103', phone: '0142 222 0000' }],
           contacts: [{ name: 'J. Saini', role: 'Project safety head', dept: 'Safety' }, { name: 'L. Agarwal', role: 'Purchase manager', dept: 'Purchase' }],
           purchase: { status: 'Approved', note: 'Price agreed at ₹236 on 29 Sep 2026.' }, safety: { status: 'Approved', note: 'Trial passed on 16 Sep 2026.' },
           activity: [
@@ -992,6 +995,10 @@ class Component extends DCLogic {
           activity: [{ date: '6 Nov 2026', type: 'PO received', by: 'Rohit', note: 'PO uploaded as PO-4425 (vests made, gloves bought in).', next: '' }, { date: '1 Oct 2026', type: 'Imported', by: 'Owner', note: 'Existing customer imported from Busy and the old Excel sheet at go-live.', next: '' }], docs: [] }
       ],
       orders: [
+        { id: 'PO-4477', custPo: 'IHL/PUR/2026/0512', customer: 'Indus Highways Ltd', plant: 'NH-48 Jaipur package', date: '25 Nov 2026', deliver: '28 Dec 2026', ldStart: '29 Dec 2026', ld: '0.5% per week, max 5%', value: '₹2,36,000', terms: '30 days after delivery', prod: 'Not in queue',
+          holdNote: 'Saved today, not yet added to the production queue. The customer is confirming the new logo artwork for the jackets.',
+          chart: { colour: 'Fluorescent yellow', logo: 'Embroidery', tape: '3M Scotchlite 50 mm', zip: 'YKK zipper', notes: 'Transparent ID pocket. New logo artwork awaited from customer.' },
+          lines: [{ item: 'Reflective Safety Jacket', size: 'M / L / XL', qty: '300 / 400 / 300', type: 'Make', status: 'Not started' }], reminders: [] },
         { id: 'PO-4425', custPo: 'KCL/SAFE/0932', customer: 'Kaveri Cables', plant: 'Jaipur plant', date: '6 Nov 2026', deliver: '28 Nov 2026', ldStart: '29 Nov 2026', ld: '0.5% per week, max 5%', value: '₹1,86,000', prod: 'Ready for packing', prodDone: '22 Nov 2026',
           addr: 'Stores In-charge\nKaveri Cables Ltd, Plot 14, RIICO Industrial Area\nSitapura, Jaipur, Rajasthan 302022', env: 'Purchase Manager, Kaveri Cables, Jaipur', city: 'Jaipur',
           lines: [{ item: 'Hi-Vis Reflective Vest', size: 'M / L / XL', qty: '300 / 400 / 300', type: 'Make', status: 'Ready' }, { item: 'Safety gloves', size: '9', qty: '1,000', type: 'Buy-in', status: 'Received' }], reminders: [] },
@@ -1175,7 +1182,7 @@ class Component extends DCLogic {
       if (sh && sh.state === 'delivered') return 'Client · Delivered';
       if (sh) return 'Client · Dispatched';
       const o = openById[lp];
-      return 'Client · ' + (o && o.prod === 'In production' ? 'In production' : o && o.prod === 'Ready for packing' ? 'Ready to dispatch' : 'In queue');
+      return 'Client · ' + (o && o.prod === 'Not in queue' ? 'Not in queue' : o && o.prod === 'In production' ? 'In production' : o && o.prod === 'Ready for packing' ? 'Ready to dispatch' : 'In queue');
     };
     const leadRows = filtered.map((l) => Object.assign({}, l, { stageLabel: orderShort(l), pillStyle: pill(stageKind[l.stage]), open: openLead(l), followStyle: l.due ? 'color: #B91C1C; font-weight: 600' : 'color: #1B1E23' }));
     const followLeads = visibleLeads.filter((l) => l.due && isOpenStage(l.stage)).map((l) => Object.assign({}, l, { pillStyle: pill(stageKind[l.stage]), open: openLead(l) }));
@@ -1234,6 +1241,7 @@ class Component extends DCLogic {
       const st = [];
       st.push({ label: 'PO received', state: 'done', detail: jo.custPo ? 'Customer PO ' + jo.custPo : 'Uploaded as ' + jo.id, date: jo.date });
       if (isClosed || linesReady) st.push({ label: 'Production', state: 'done', detail: 'All lines ready', date: jo.prodDone || '' });
+      else if (jo.prod === 'Not in queue') st.push({ label: 'Production', state: 'now', detail: 'Not in the production queue yet', date: 'Deliver by ' + jo.deliver });
       else if (jo.prod === 'Ready for packing') st.push({ label: 'Production', state: 'now', detail: 'Made items ready · waiting for bought-in items', date: jo.prodDone || '' });
       else if (jo.prod === 'In production') st.push({ label: 'Production', state: 'now', detail: 'In production now', date: 'Deliver by ' + jo.deliver });
       else st.push({ label: 'Production', state: 'now', detail: 'Waiting · #' + qpos + ' of ' + s.queue.length + ' in queue', date: 'Deliver by ' + jo.deliver });
@@ -1294,10 +1302,10 @@ class Component extends DCLogic {
     s.orders.forEach((o) => { ordersById[o.id] = o; });
     const posOf = (id) => s.queue.indexOf(id) + 1;
     const pendingFor = (id) => s.requests.some((r) => r.po === id && r.status === 'Pending');
-    const prodKind = (p) => (p === 'In production' ? 'blue' : p === 'Ready for packing' ? 'green' : 'neutral');
+    const prodKind = (p) => (p === 'In production' ? 'blue' : p === 'Ready for packing' ? 'green' : p === 'Not in queue' ? 'amber' : 'neutral');
     const makeText = (o) => o.lines.filter((x) => x.type === 'Make').map((x) => x.item + ' ' + x.qty).join(', ');
-    const stageOf = (o) => (o.prod === 'In production' ? 'In production' : o.prod === 'Ready for packing' ? (o.lines.every((x) => ['Ready', 'Received'].indexOf(x.status) >= 0) ? 'Ready to dispatch' : 'Waiting for bought-in') : 'Waiting');
-    const orderFilterList = ['All', 'Waiting', 'In production', 'Ready to dispatch'];
+    const stageOf = (o) => (o.prod === 'Not in queue' ? 'Not in queue' : o.prod === 'In production' ? 'In production' : o.prod === 'Ready for packing' ? (o.lines.every((x) => ['Ready', 'Received'].indexOf(x.status) >= 0) ? 'Ready to dispatch' : 'Waiting for bought-in') : 'Waiting');
+    const orderFilterList = ['All', 'Not in queue', 'Waiting', 'In production', 'Ready to dispatch'];
     const orderRowsAll = s.orders.map((o) => {
       const mk = o.lines.filter((x) => x.type === 'Make').length;
       const bi = o.lines.length - mk;
@@ -1336,6 +1344,9 @@ class Component extends DCLogic {
       prodBtn: posOf(P0.id) > 0 ? 'See in production queue' : P0.prod === 'Ready for packing' ? 'See in dispatch' : 'See in production queue',
       goProd: () => this.setState(posOf(P0.id) > 0 ? { screen: 'production', prodFocus: P0.id, reqFor: '' } : { screen: 'dispatch', prodFocus: '' }),
       custPoText: P0.custPo || 'not recorded', handler: poLead ? poLead.owner : 'Not set', termsText: P0.terms || '30 days after delivery',
+      notQueued: P0.prod === 'Not in queue', holdText: P0.holdNote || '',
+      addToQueue: () => this.setState({ queue: s.queue.concat([P0.id]), orders: s.orders.map((o) => (o.id === P0.id ? Object.assign({}, o, { prod: 'Waiting', lines: o.lines.map((y) => (y.type === 'Make' ? Object.assign({}, y, { status: 'Waiting' }) : y)) }) : o)),
+        log: [{ text: P0.id + ' added to the production queue at position ' + (s.queue.length + 1), detail: 'Added by ' + me + ' · 25 Nov 2026' }].concat(s.log) }),
       prodWaiting: P0.prod === 'Waiting' && posOf(P0.id) > 0, prodStarted: P0.prod === 'In production' || P0.prod === 'Ready for packing', prodDone: P0.prod === 'Ready for packing',
       prodChipText: P0.prod === 'In production' ? 'Added to production · being made now' : 'Production done',
       prodChip: 'display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 700; background: #E7F4EC; color: #15803D; border: 1px solid #A7D7B8',
@@ -1347,7 +1358,7 @@ class Component extends DCLogic {
       totalPcs: P0.lines.reduce((t, x) => t + sumQty(x.qty), 0).toLocaleString('en-IN') + ' units',
       steps: (function () {
         const labels = ['PO received', 'In queue', 'In production', 'Ready to pack', 'Dispatched', 'Delivered', 'Paid'];
-        const cur = P0.prod === 'In production' ? 2 : P0.prod === 'Ready for packing' ? 3 : 1;
+        const cur = P0.prod === 'Not in queue' ? 0 : P0.prod === 'In production' ? 2 : P0.prod === 'Ready for packing' ? 3 : 1;
         const dates = [P0.date, P0.date, P0.prod === 'In production' ? 'now' : '', P0.prodDone || '', '', '', ''];
         return labels.map((lb, i) => ({ label: lb, date: i <= cur ? dates[i] : '', arrow: i < labels.length - 1,
           dot: 'width: 10px; height: 10px; border-radius: 50%; flex: none; ' + (i < cur ? 'background: #15803D' : i === cur ? 'background: #C2410C; box-shadow: 0 0 0 4px #FDEEE6' : 'background: #D6D6CF'),
@@ -1355,7 +1366,7 @@ class Component extends DCLogic {
       })(),
       history: (function () {
         const h = [];
-        h.push({ date: P0.date, title: 'PO received and added to the production queue', detail: (P0.custPo ? 'Customer PO ' + P0.custPo + ' · ' : '') + 'production chart created' });
+        h.push({ date: P0.date, title: P0.prod === 'Not in queue' || s.log.some((g) => g.text.indexOf(P0.id + ' added to the production queue') === 0) ? 'PO received' : 'PO received and added to the production queue', detail: (P0.custPo ? 'Customer PO ' + P0.custPo + ' · ' : '') + 'production chart created' });
         P0.reminders.forEach((r, i) => h.push({ date: r.date, title: 'Customer reminder ' + (i + 1), detail: r.via + ': ' + r.note + (r.by ? ' · logged by ' + r.by : '') }));
         s.requests.filter((r) => r.po === P0.id).forEach((r) => h.push({ date: '25 Nov 2026', title: 'Priority request · ' + r.status, detail: 'Asked by ' + r.by + ': ' + r.reason }));
         s.log.filter((g) => g.text.indexOf(P0.id) >= 0 && !/ added at position /.test(g.text)).forEach((g) => { const m = g.detail.match(/(\d{1,2} [A-Z][a-z]{2} \d{4})/); h.push({ date: m ? m[1] : '', title: g.text, detail: g.detail.replace(/ · \d{1,2} [A-Z][a-z]{2} \d{4}$/, '') }); });
@@ -1366,7 +1377,7 @@ class Component extends DCLogic {
       chart: { colour: CH.colour, logo: CH.logo, tape: CH.tape, zip: CH.zip, notes: CH.notes || 'None', custPo: P0.custPo || 'As per PO', target: minusDays(P0.deliver, 5), rows: chRows, total: chTotal.toLocaleString('en-IN') },
       remHint: 'The customer has reminded ' + P0.reminders.length + ' time' + (P0.reminders.length > 1 ? 's' : '') + '. If it cannot wait for its turn, ask the admin to move it up.',
       hasLead: !!poLead, leadName: poLead ? poLead.name : '', openLead: poLead ? openLead(poLead) : () => {},
-      pos: posOf(P0.id), posText: posOf(P0.id) ? '#' + posOf(P0.id) + ' of ' + s.queue.length : 'Out of the queue (made items done)', pillStyle: pill(prodKind(P0.prod)),
+      pos: posOf(P0.id), posText: posOf(P0.id) ? '#' + posOf(P0.id) + ' of ' + s.queue.length : P0.prod === 'Not in queue' ? 'Not added yet' : 'Out of the queue (made items done)', pillStyle: pill(prodKind(P0.prod)),
       lines: P0.lines.map((x, li) => Object.assign({}, x, {
         breakdown: breakdownOf(x), total: sumQty(x.qty).toLocaleString('en-IN'), note: x.type === 'Make' ? stdOf(x.item) : 'Bought from the market',
         canAdvance: x.type === 'Buy-in' && !!NEXT[x.status], nextStatus: (NEXT[x.status] || '').toLowerCase(),
@@ -1377,7 +1388,7 @@ class Component extends DCLogic {
       remList: P0.reminders.map((r, i) => Object.assign({}, r, { n: i + 1, hasFile: !!r.file, by: r.by ? ' · logged by ' + r.by : '' })),
       noRem: P0.reminders.length === 0,
       canRequest: P0.reminders.length > 0 && P0.prod === 'Waiting' && !pendingFor(P0.id),
-      readyText: (readyLines === P0.lines.length ? 'Ready. This order is waiting in Dispatch, step 1. ' : '') + readyLines + ' of ' + P0.lines.length + ' lines ready. The order can be dispatched when every line, made and bought in, is ready.',
+      readyBox0: '', readyText: (readyLines === P0.lines.length ? 'Ready. This order is waiting in Dispatch, step 1. ' : '') + readyLines + ' of ' + P0.lines.length + ' lines ready. The order can be dispatched when every line, made and bought in, is ready.',
       readyBox: 'font-size: 14px; padding: 10px 12px; border-radius: 8px; ' + (readyLines === P0.lines.length ? 'background: #E7F4EC; color: #15803D' : 'background: #FBF1DF; color: #8A4B05')
     });
 
@@ -1621,6 +1632,7 @@ class Component extends DCLogic {
     const dayN = (t) => { const q = String(t).split(' '); return Math.round(new Date(Number(q[2]), MON.indexOf(q[1]), Number(q[0])).getTime() / 86400000); };
     s.orders.filter((o) => o.ldStart && dayN(o.ldStart) - dayN('25 Nov 2026') >= 0 && dayN(o.ldStart) - dayN('25 Nov 2026') <= 7).forEach((o) => nItems.push({ id: 'ld-' + o.id, kind: 'red', title: 'Late penalty starts ' + o.ldStart + ': ' + o.id, detail: o.customer + ' · ' + o.prod + ' · deliver by ' + o.deliver, go: goTo('po', { poId: o.id, chartOpen: false }) }));
     remAll.filter((r) => dayN('25 Nov 2026') - dayN(r.date) <= 2).forEach((r) => nItems.push({ id: 'rem-' + r.po + '-' + r.n, kind: 'blue', title: 'Customer reminder on ' + r.po, detail: r.customer + ' · ' + r.via + ' · logged by ' + r.by, go: goTo('po', { poId: r.po, chartOpen: false }) }));
+    s.orders.filter((o) => o.prod === 'Not in queue').forEach((o) => nItems.push({ id: 'nq-' + o.id, kind: 'amber', title: 'Not in production queue: ' + o.id, detail: o.customer + ' · deliver by ' + o.deliver, go: goTo('po', { poId: o.id, chartOpen: false }) }));
     overdue.forEach((x) => nItems.push({ id: 'sh-' + x.id, kind: 'red', title: 'Shipment overdue: ' + x.inv + ' · ' + x.customer, detail: x.carrier + ' ' + x.lr + ' · ' + x.late, go: goTo('dispatch', { shipFilter: 'Overdue' }) }));
     s.payments.filter((p) => p.kind === 'red').forEach((p) => nItems.push({ id: 'pay-' + p.inv, kind: 'red', title: 'Payment over 45 days: ' + p.inv, detail: p.customer + ' · balance ' + p.bal, go: goTo('payments') }));
     const NC = { red: '#DC2626', amber: '#D97706', blue: '#2563EB' };
@@ -1738,7 +1750,7 @@ class Component extends DCLogic {
       },
 
       clientRows: clientRows, clientsSub: (admin ? 'Every client. ' : 'Your clients only. ') + clientRows.length + ' in total. A lead becomes a client when its first PO arrives; its full history from the first contact to the last payment stays here.',
-      j: j, openUpload: () => this.setState(Object.assign({ screen: 'orders', upF: {}, upLines: null, uploadOpen: true, uploadDone: false, upLead: L.id, pdfLead: L.id, upErr: '', upRepeat: isClient(L), upDdOpen: false }, chartFrom(L.custom))),
+      j: j, openUpload: () => this.setState(Object.assign({ screen: 'orders', upQueueNow: true, upF: {}, upLines: null, uploadOpen: true, uploadDone: false, upLead: L.id, pdfLead: L.id, upErr: '', upRepeat: isClient(L), upDdOpen: false }, chartFrom(L.custom))),
       docOpen: s.docOpen, docType: s.docType, docNote: s.docNote, docAdmin: s.docAdmin,
       toggleDoc: () => this.setState({ docOpen: !s.docOpen, docFile: '', docNote: '', docAdmin: false }),
       setDocType: (e) => this.setState({ docType: e.target.value, docAdmin: e.target.value === 'Cost sheet' }),
@@ -1758,10 +1770,11 @@ class Component extends DCLogic {
       orderFilters: orderFilterList.map((f) => ({ label: f + ' (' + orderRowsAll.filter((o) => f === 'All' || o.stage === f || (f === 'Ready to dispatch' && o.stage === 'Waiting for bought-in')).length + ')', style: chip((s.orderFilter || 'All') === f), pick: () => this.setState({ orderFilter: f }) })),
       po: po, queueLen: s.queue.length,
       uploadOpen: s.uploadOpen, uploadDone: s.uploadDone, aiFields: aiFields, aiLines: aiLines,
-      toggleUpload: () => this.setState(Object.assign({ upF: {}, upLines: null, uploadOpen: !s.uploadOpen, uploadDone: false, upErr: '', pdfLead: 'L8', upRepeat: false, upDdOpen: false, upLead: activeLeads.some((l) => l.id === 'L8') ? 'L8' : '' }, chartFrom(activeLeads.some((l) => l.id === 'L8') ? (s.leads.find((l) => l.id === 'L8') || {}).custom : ''))),
+      toggleUpload: () => this.setState(Object.assign({ upQueueNow: true, upF: {}, upLines: null, uploadOpen: !s.uploadOpen, uploadDone: false, upErr: '', pdfLead: 'L8', upRepeat: false, upDdOpen: false, upLead: activeLeads.some((l) => l.id === 'L8') ? 'L8' : '' }, chartFrom(activeLeads.some((l) => l.id === 'L8') ? (s.leads.find((l) => l.id === 'L8') || {}).custom : ''))),
       upIsRepeat: upIsRepeat, upNotRepeat: !upIsRepeat, upRepeatName: upRec ? upRec.name : '', upNoOpts: upLeadOpts.length === 0,
       upDdOpen: !!s.upDdOpen, upDdExpanded: s.upDdOpen ? 'true' : 'false', toggleDd: () => this.setState({ upDdOpen: !s.upDdOpen }),
       upDdLabel: upTarget && !upIsRepeat ? upTarget.name + ' · ' + upTarget.plant + ' · ' + upTarget.stage : 'Choose an active lead', upDdLabelStyle: upTarget ? 'color: #1B1E23; font-weight: 600' : 'color: #5D6470',
+      upQueueNow: s.upQueueNow !== false, setUpQueueNow: (e) => this.setState({ upQueueNow: !!e.target.checked }),
       up: up, pdfFile: pdfFile, upLeadOpts: upLeadOpts, upScope: admin ? 'all' : 'your', upHasMatch: !!upTarget, upMatchText: upMatchText, upMatchStyle: upMatchStyle,
       upHasErr: !!s.upErr, upErr: s.upErr, uploadMsg: s.uploadMsg, upSaveLabel: upTarget ? 'Save PO under ' + upTarget.name : 'Save PO',
       openUpLead: () => { const t = s.leads.find((l) => l.id === s.upLead); if (t) this.setState({ screen: 'lead', leadId: t.id, leadPoSel: '' }); },
@@ -1775,14 +1788,15 @@ class Component extends DCLogic {
         const o = { id: newId, chart: { colour: s.chColour, logo: s.chLogo, tape: s.chTape, zip: s.chZip, notes: s.chNotes.trim() }, custPo: pdfCustPo, addr: isWC ? 'Stores In-charge\nWestern Cement Ltd, Kota plant\nKota, Rajasthan' : 'Stores\n' + upTarget.name + '\n' + upTarget.plant, env: 'Purchase Manager, ' + upTarget.name, city: isWC ? 'Kota' : upTarget.plant, customer: upTarget.name, plant: upTarget.plant, date: '25 Nov 2026', deliver: '26 Dec 2026', ldStart: '27 Dec 2026', ld: '0.5% per week, max 5%', value: '₹1,35,000', prod: 'Waiting',
           lines: [{ item: 'Reflective Safety Jacket', size: 'M / L / XL', qty: '200 / 300 / 100', type: 'Make', status: 'Waiting' }, { item: 'Safety gloves', size: '9', qty: '600', type: 'Buy-in', status: 'To buy' }], reminders: [] };
         Object.assign(o, { custPo: String(up.custPo).trim(), date: this.fmt(up.date), deliver: this.fmt(up.deliver), ldStart: minusDays(this.fmt(up.deliver), -1), ld: up.ld, terms: up.terms,
-          lines: goodLines.map((x) => ({ item: x.item.trim(), size: (x.size || '').trim() || 'Free size', qty: x.qty.trim(), type: x.type, status: x.type === 'Make' ? 'Waiting' : 'To buy' })) });
+          lines: goodLines.map((x) => ({ item: x.item.trim(), size: (x.size || '').trim() || 'Free size', qty: x.qty.trim(), type: x.type, status: x.type === 'Make' ? (s.upQueueNow === false ? 'Not started' : 'Waiting') : 'To buy' })) });
+        const qNow = s.upQueueNow !== false; if (!qNow) { o.prod = 'Not in queue'; o.holdNote = 'Saved without adding to the production queue.'; }
         const repeat = isClient(upTarget);
-        this.setState({ orders: s.orders.concat([o]), queue: s.queue.concat([newId]), uploadOpen: false, uploadDone: true, upRepeat: false, lastUp: newId, chartOpen: true, uploadCount: s.uploadCount + 1, upErr: '', leadPoSel: newId,
-          uploadMsg: newId + (repeat ? ' saved for the client ' : ' saved under the lead ') + upTarget.name + (repeat ? ' (repeat order)' : '. The lead has moved from Leads to Clients') + '. A production queue entry was created at position ' + (s.queue.length + 1) + ' and its production chart is ready to print.',
+        this.setState({ orders: s.orders.concat([o]), queue: qNow ? s.queue.concat([newId]) : s.queue, uploadOpen: false, uploadDone: true, upRepeat: false, lastUp: newId, chartOpen: true, uploadCount: s.uploadCount + 1, upErr: '', leadPoSel: newId,
+          uploadMsg: newId + (repeat ? ' saved for the client ' : ' saved under the lead ') + upTarget.name + (repeat ? ' (repeat order)' : '. The lead has moved from Leads to Clients') + (qNow ? '. A production queue entry was created at position ' + (s.queue.length + 1) + ' and its production chart is ready to print.' : '. It is not in the production queue yet. Open the PO and click Add to production queue when ready.'),
           leads: s.leads.map((l) => (l.id === upTarget.id ? Object.assign({}, l, { stage: 'Won', pos: (l.pos || []).concat([newId]), follow: 'Closed', due: false,
             docs: [{ name: 'Customer PO ' + o.custPo, kind: 'Customer PO', type: 'PDF · ' + pdfFile, date: '25 Nov 2026', by: me, adminOnly: false }].concat(l.docs),
             activity: [{ date: '25 Nov 2026', type: 'PO received', by: me, note: 'Customer PO ' + o.custPo + ' uploaded as ' + newId + (repeat ? ' (repeat order).' : '. Lead became a client.'), next: '' }].concat(l.activity) }) : l)),
-          log: [{ text: newId + ' added at position ' + (s.queue.length + 1), detail: 'Uploaded by ' + me + ' for ' + upTarget.name + ' · 25 Nov 2026' }].concat(s.log) });
+          log: [{ text: newId + (qNow ? ' added at position ' + (s.queue.length + 1) : ' saved, not yet in the production queue'), detail: 'Uploaded by ' + me + ' for ' + upTarget.name + ' · 25 Nov 2026' }].concat(s.log) });
       },
       ch: { colour: s.chColour, logo: s.chLogo, tape: s.chTape, zip: s.chZip, notes: s.chNotes,
         setColour: (e) => this.setState({ chColour: e.target.value }), setLogo: (e) => this.setState({ chLogo: e.target.value }),
