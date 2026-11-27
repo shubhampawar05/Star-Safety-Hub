@@ -33,3 +33,7 @@ Source of the prototype (Design canvas format). `index.html` on this branch is s
 - Log follow-up popup: how, who you spoke to, what they said, optional new expected date (keeps the first promised date).
 - Update status popup for transporters without online tracking: In transit (with place), Out for delivery, or Delivered (received by, proof of delivery file).
 - Pack and dispatch now opens as a popup. Saving it records the Packed and Dispatched entries with time.
+
+## Header and sidebar
+- Header back to the earlier white style (orange mark, "Star Safety Hub", "Lead to Payment · prototype with sample data", black and white role buttons), keeping the notification bell.
+- Sidebar grouped into Sales, Operations, Accounts and Setup, with an icon per item, a clearer active state, counts (follow-ups due, orders not in queue, requests to approve, overdue shipments, payments over 45 days) and a user card with Busy sync and office network status at the bottom.
