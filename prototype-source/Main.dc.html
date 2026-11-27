@@ -701,34 +701,49 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </sc-if>
 <div style="display: flex; flex-direction: column; gap: 16px">
 <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center">
-<div><h1 style="margin: 0; font-size: 24px">Production queue</h1><p class="muted" style="margin: 4px 0 0">Comes from: made lines of every saved PO. First in, first out; any change in order needs admin approval and is logged. When an order is marked ready, it leaves this queue and moves to Dispatch.</p></div>
+<div><h1 style="margin: 0; font-size: 24px">Production queue</h1><p class="muted" style="margin: 4px 0 0">Comes from: made lines of every saved PO. Shows when each order joined the queue and when it passed each stage. First in, first out; any change in order needs admin approval and is logged. When an order is marked ready, it leaves this queue and moves to Dispatch.</p></div>
 <button class="btn" onClick="{{ togglePrint }}">Print sequence for the floor</button>
 </div>
 <sc-if value="{{ printOpen }}" hint-placeholder-val="{{ false }}">
 <section class="card" style="display: flex; flex-direction: column; gap: 10px">
 <div style="display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap"><strong>Production sequence · printed 25 Nov 2026 by {{ me }}</strong><span class="muted" style="font-size: 13px">Last change approved by: {{ lastApprover }}</span></div>
-<sc-for list="{{ queueRows }}" as="q" hint-placeholder-count="5"><div style="display: flex; gap: 12px; font-size: 14px; border-top: 1px solid #EFEFEA; padding-top: 8px"><strong style="width: 28px">{{ q.pos }}</strong><span style="flex: 1">{{ q.id }} · {{ q.customer }} · {{ q.make }}</span><span class="muted">by {{ q.deliver }}</span></div></sc-for>
+<sc-for list="{{ queueRows }}" as="q" hint-placeholder-count="5"><div style="display: flex; gap: 12px; font-size: 14px; border-top: 1px solid #EFEFEA; padding-top: 8px"><strong style="width: 28px">{{ q.pos }}</strong><span style="flex: 1">{{ q.id }} · {{ q.customer }} · {{ q.make }} · <strong>{{ q.stage }}</strong></span><span class="muted">by {{ q.deliver }}</span></div></sc-for>
 <div style="display: flex; gap: 8px"><button class="btn btn-primary btn-sm" onClick="{{ doPrint }}">Print</button><button class="btn btn-sm" onClick="{{ togglePrint }}">Close</button></div>
 </section>
 </sc-if>
+<section class="card" style="display: flex; flex-direction: column; gap: 10px">
+<div><h2 style="margin: 0; font-size: 16px">On the floor now</h2><p class="muted" style="margin: 4px 0 0; font-size: 13px">Which order is at which stage. The admin updates the stage when the floor reports progress, and every change is saved with date, time and name.</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px">
+<sc-for list="{{ board }}" as="col" hint-placeholder-count="8"><div style="{{ col.style }}"><span style="font-size: 11px; font-weight: 700; color: #5D6470; text-transform: uppercase; letter-spacing: .04em">{{ col.label }}</span><strong style="font-size: 22px">{{ col.count }}</strong><sc-for list="{{ col.items }}" as="it" hint-placeholder-count="1"><button class="linkbtn" style="font-size: 13px" onClick="{{ it.open }}">{{ it.text }}</button></sc-for></div></sc-for>
+</div>
+</section>
 <div class="card" style="padding: 0; overflow-x: auto">
-<div style="min-width: 980px">
-<div class="th" style="grid-template-columns: 44px 100px minmax(150px, 1.5fr) minmax(180px, 2fr) 120px 140px 190px"><span>#</span><span>PO</span><span>Customer</span><span>What to make</span><span>Deliver by</span><span>Status</span><span>Action</span></div>
+<div style="min-width: 1080px">
+<div class="th" style="grid-template-columns: 40px minmax(170px, 1.4fr) minmax(170px, 1.6fr) 150px minmax(180px, 1.5fr) 120px 200px"><span>#</span><span>PO / customer</span><span>What to make</span><span>In queue since</span><span>Stage now</span><span>Deliver by</span><span>Action</span></div>
 <sc-for list="{{ queueRows }}" as="q" hint-placeholder-count="5">
 <div style="border-bottom: 1px solid #EFEFEA">
-<div class="tr" style="grid-template-columns: 44px 100px minmax(150px, 1.5fr) minmax(180px, 2fr) 120px 140px 190px; border-bottom: 0">
+<div class="tr" style="grid-template-columns: 40px minmax(170px, 1.4fr) minmax(170px, 1.6fr) 150px minmax(180px, 1.5fr) 120px 200px; border-bottom: 0; align-items: start">
 <strong>{{ q.pos }}</strong>
-<button class="linkbtn" onClick="{{ q.open }}">{{ q.id }}</button>
-<div style="display: flex; flex-direction: column; gap: 2px"><span>{{ q.customer }}</span><span style="{{ q.remStyle }}">{{ q.remText }}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><button class="linkbtn" onClick="{{ q.open }}">{{ q.id }}</button><span>{{ q.customer }}</span><span style="{{ q.remStyle }}">{{ q.remText }}</span></div>
 <span class="muted" style="font-size: 13px">{{ q.make }}</span>
-<span>{{ q.deliver }}</span>
-<span><span style="{{ q.pillStyle }}">{{ q.prod }}</span></span>
-<div>
-<sc-if value="{{ q.canFinish }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary btn-sm" onClick="{{ q.finish }}">Mark ready for packing</button></sc-if>
+<div style="display: flex; flex-direction: column; gap: 2px; font-size: 13px"><span>{{ q.since }}</span><span class="muted">{{ q.waitText }}</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span><span style="{{ q.stagePill }}">{{ q.stage }}</span></span><div aria-hidden="true" style="display: flex; gap: 2px"><sc-for list="{{ q.bar }}" as="seg" hint-placeholder-count="7"><span style="{{ seg.style }}"></span></sc-for></div><span class="muted" style="font-size: 12px">{{ q.stageSince }}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px; font-size: 13px"><span>{{ q.deliver }}</span><span style="{{ q.daysStyle }}">{{ q.daysText }}</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start">
+<sc-if value="{{ q.canStart }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary btn-sm" onClick="{{ q.start }}">Start production</button></sc-if>
+<sc-if value="{{ q.canNext }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary btn-sm" onClick="{{ q.next }}">{{ q.nextLabel }}</button></sc-if>
 <sc-if value="{{ q.canRequest }}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm" onClick="{{ q.openReq }}">Request priority</button></sc-if>
 <sc-if value="{{ q.hasReq }}" hint-placeholder-val="{{ false }}"><span style="{{ q.reqPill }}">Request pending</span></sc-if>
+<button class="btn btn-sm" aria-expanded="{{ q.tlExpanded }}" onClick="{{ q.toggleTl }}">{{ q.tlLabel }}</button>
 </div>
 </div>
+<sc-if value="{{ q.tlOpen }}" hint-placeholder-val="{{ false }}">
+<div style="padding: 0 16px 16px 56px; display: flex; flex-direction: column; gap: 0">
+<span class="lbl" style="margin-bottom: 6px">Production timeline · {{ q.id }}</span>
+<sc-for list="{{ q.tl }}" as="t" hint-placeholder-count="3"><div style="display: grid; grid-template-columns: 16px 200px 160px 1fr; gap: 10px; align-items: start; font-size: 13px; padding: 6px 0; border-top: 1px solid #EFEFEA"><span style="{{ t.dot }}"></span><strong>{{ t.stage }}</strong><span>{{ t.at }}</span><span class="muted">{{ t.detail }}</span></div></sc-for>
+<sc-if value="{{ q.hasNextUp }}" hint-placeholder-val="{{ true }}"><div style="display: grid; grid-template-columns: 16px 200px 160px 1fr; gap: 10px; font-size: 13px; padding: 6px 0; border-top: 1px dashed #D6D6CF; color: #5D6470"><span style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #C9C9C1; box-sizing: border-box; margin-top: 3px"></span><span>Next: {{ q.nextUp }}</span><span>not started</span><span></span></div></sc-if>
+</div>
+</sc-if>
 </div>
 </sc-for>
 </div>
@@ -916,7 +931,7 @@ class Component extends DCLogic {
       chColour: 'Fluorescent yellow', chLogo: 'Screen print', chTape: '3M Scotchlite 50 mm', chZip: 'YKK zipper', chNotes: '', chartOpen: false, lastUp: '',
       remOpen: false, remVia: 'Email (PDF uploaded)', remNote: '', remFile: '',
       docOpen: false, docType: 'Quotation', docFile: '', docNote: '', docAdmin: false,
-      reqFor: '', reqReason: '', openShip: 'S1', prodFocus: '', remFilter: 'All', orderFilter: 'All', upF: {}, upLines: null,
+      reqFor: '', reqReason: '', openShip: 'S1', prodFocus: '', remFilter: 'All', openTl: '', orderFilter: 'All', upF: {}, upLines: null,
       packFor: '', pkAddr: '', pkEnv: '', pkBoxes: [], pkInv: '', pkCarrier: 'TCI', pkLr: '', pkExp: '', pkPhoto: false, pkErr: '', dispatchMsg: '', pkA: {}, pkBookIdx: -1, pkSaveAddr: true, viewLabels: '',
       leads: [
         { id: 'L9', name: 'Indus Highways Ltd', plant: 'NH-48 Jaipur package', industry: 'Road construction', product: 'Reflective Safety Jacket', sizes: 'M, L, XL', custom: 'Embroidery logo, fluorescent yellow, 3M Scotchlite tape, transparent ID pocket', qty: '1,800', price: '₹236', owner: 'Rohit', source: 'Website form', stage: 'Won', follow: 'Closed', due: false, lostReason: '', pos: ['PO-4352', 'PO-4477'], addresses: [{ label: 'Jaipur site office', name: 'L. Agarwal (Purchase Manager)', company: 'Indus Highways Ltd', line1: 'NH-48 Project Site Office, Km 212', line2: 'Near Shahpura toll plaza', city: 'Jaipur', state: 'Rajasthan', pin: '303103', phone: '0142 222 0000' }],
@@ -1046,6 +1061,15 @@ class Component extends DCLogic {
       actOpen: false, actF: {}, actErr: '', contactOpen: false, ctF: {}, ctErr: '', docView: '', notifOpen: false, notifRead: [],
       nlF: {}, nlLines: [], nlErr: ''
     });
+    const PTL = {
+      'PO-4402': [{ stage: 'Added to queue', at: '2 Nov 2026, 11:05', by: 'Neha' }, { stage: 'Cutting', at: '20 Nov 2026, 09:30', by: 'Owner' }, { stage: 'Stitching', at: '22 Nov 2026, 10:15', by: 'Owner' }, { stage: 'Logo printing / embroidery', at: '24 Nov 2026, 15:40', by: 'Owner' }],
+      'PO-4419': [{ stage: 'Added to queue', at: '8 Nov 2026, 12:20', by: 'Rohit' }],
+      'PO-4436': [{ stage: 'Added to queue', at: '14 Nov 2026, 16:45', by: 'Neha' }],
+      'PO-4450': [{ stage: 'Added to queue', at: '19 Nov 2026, 10:10', by: 'Amit' }],
+      'PO-4471': [{ stage: 'Added to queue', at: '24 Nov 2026, 17:30', by: 'Rohit' }],
+      'PO-4425': [{ stage: 'Added to queue', at: '6 Nov 2026, 11:00', by: 'Rohit' }, { stage: 'Cutting', at: '12 Nov 2026, 09:00', by: 'Owner' }, { stage: 'Stitching', at: '14 Nov 2026, 10:30', by: 'Owner' }, { stage: 'Logo printing / embroidery', at: '17 Nov 2026, 14:00', by: 'Owner' }, { stage: 'Reflective tape', at: '19 Nov 2026, 11:15', by: 'Owner' }, { stage: 'Quality check', at: '21 Nov 2026, 16:00', by: 'Owner' }, { stage: 'Ready for packing', at: '22 Nov 2026, 12:30', by: 'Owner' }]
+    };
+    this.state.orders = this.state.orders.map((o) => Object.assign({}, o, { ptl: o.ptl || PTL[o.id] || [] }));
     let k = 0;
     const slug = (n) => n.toLowerCase().replace(/[^a-z]+/g, '.').replace(/^\.+|\.+$/g, '');
     this.state.leads = this.state.leads.map((l) => {
@@ -1088,7 +1112,7 @@ class Component extends DCLogic {
     q.splice(to, 0, r.po);
     this.setState({
       queue: q,
-      lastApprover: 'Owner, 25 Nov 2026',
+      lastApprover: 'Owner, 25 Nov 2026', orders: s.orders.map((x) => (x.id === r.po ? Object.assign({}, x, { ptl: (x.ptl || []).concat([{ stage: 'Moved up from #' + (from + 1) + ' to #' + (to + 1), at: '25 Nov 2026, ' + (function () { const d = new Date(); return (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); })(), by: 'Owner', note: 'asked by ' + r.by }]) }) : x)),
       requests: s.requests.map((x) => (x.id === r.id ? Object.assign({}, x, { status: 'Approved' }) : x)),
       log: [{ text: r.po + ' moved from position ' + (from + 1) + ' to ' + (to + 1), detail: 'Asked by ' + r.by + ': ' + r.reason + ' · Approved by Owner · 25 Nov 2026' }].concat(s.log)
     });
@@ -1154,6 +1178,13 @@ class Component extends DCLogic {
     const daysLeft = (t) => { const n = dayNo(t) - dayNo('25 Nov 2026'); if (isNaN(n)) return { text: '', style: '' }; return n < 0 ? { text: 'Late by ' + (-n) + ' day' + (n === -1 ? '' : 's'), style: 'font-size: 13px; color: #B91C1C; font-weight: 600' } : n === 0 ? { text: 'Due today', style: 'font-size: 13px; color: #B91C1C; font-weight: 600' } : { text: n + ' day' + (n === 1 ? '' : 's') + ' left', style: 'font-size: 13px; ' + (n <= 7 ? 'color: #B45309; font-weight: 600' : 'color: #5D6470') }; };
     const sumQty = (q) => String(q).split('/').reduce((t, x) => t + (Number(String(x).replace(/[^0-9]/g, '')) || 0), 0);
     const breakdownOf = (ln) => { const sz = String(ln.size).split(' / '); const qt = String(ln.qty).split(' / '); return sz.length === qt.length && sz.length > 1 ? sz.map((z, i) => z + ': ' + qt[i]).join(' · ') : (ln.size === 'Free size' ? 'Free size' : 'Size ' + ln.size) + ': ' + ln.qty; };
+    const PSTAGES = ['Added to queue', 'Cutting', 'Stitching', 'Logo printing / embroidery', 'Reflective tape', 'Quality check', 'Ready for packing'];
+    const pad2 = (n) => (n < 10 ? '0' : '') + n;
+    const nowAt = () => { const d = new Date(); return '25 Nov 2026, ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
+    const atMs = (t) => { const m = String(t).match(/(\d{1,2}) ([A-Z][a-z]{2}) (\d{4}), (\d{1,2}):(\d{2})/); if (!m) return NaN; return new Date(Number(m[3]), MON.indexOf(m[2]), Number(m[1]), Number(m[4]), Number(m[5])).getTime(); };
+    const durText = (ms) => { if (isNaN(ms) || ms < 0) return ''; const h = Math.round(ms / 3600000); if (h < 1) return 'under 1 hour'; if (h < 24) return h + ' hour' + (h === 1 ? '' : 's'); const d = Math.floor(h / 24); const r = h % 24; return d + ' day' + (d === 1 ? '' : 's') + (r ? ' ' + r + ' h' : ''); };
+    const NOWMS = () => atMs(nowAt());
+    const curStage = (o) => { const st = (o.ptl || []).filter((e) => PSTAGES.indexOf(e.stage) >= 0); return st.length ? st[st.length - 1] : null; };
     const PRODUCTS = ['Reflective Safety Jacket', 'Hi-Vis Reflective Vest', 'LED Reflective Safety Jacket', 'Auto-Glow Reflective Safety Jacket', 'FR Coverall', 'FR Jacket', 'FR Trousers', 'FR Hood', '3M Scotchlite reflective tape', 'Safety helmet', 'Safety gloves', 'Safety shoes'];
     const addOther = () => {
       const v = (this.state.nlOther || '').trim();
@@ -1313,7 +1344,7 @@ class Component extends DCLogic {
       const dl = daysLeft(o.deliver); const stg = stageOf(o); const pos0 = posOf(o.id);
       return Object.assign({}, o, {
         daysText: dl.text, daysStyle: dl.style, stage: stg,
-        stageText: stg === 'Waiting' ? 'Waiting · #' + pos0 + ' in queue' : stg,
+        stageText: stg === 'Waiting' ? 'Waiting · #' + pos0 + ' in queue' : stg === 'In production' && curStage(o) ? 'In production · ' + curStage(o).stage.replace('Logo printing / embroidery', 'logo').toLowerCase() : stg,
         itemsText: o.lines.map((x) => x.item + ' × ' + sumQty(x.qty).toLocaleString('en-IN') + (x.type === 'Buy-in' ? ' (buy-in)' : '')).join(', '),
         inQueue: posOf(o.id) > 0, notInQueue: !(posOf(o.id) > 0), queueAria: 'See ' + o.id + ' in the production queue', goProd: () => this.setState({ screen: 'production', prodFocus: o.id, reqFor: '' }),
         pos: posOf(o.id), posText: posOf(o.id) ? '#' + posOf(o.id) : 'Made items done', pillStyle: pill(prodKind(o.prod)),
@@ -1345,7 +1376,7 @@ class Component extends DCLogic {
       goProd: () => this.setState(posOf(P0.id) > 0 ? { screen: 'production', prodFocus: P0.id, reqFor: '' } : { screen: 'dispatch', prodFocus: '' }),
       custPoText: P0.custPo || 'not recorded', handler: poLead ? poLead.owner : 'Not set', termsText: P0.terms || '30 days after delivery',
       notQueued: P0.prod === 'Not in queue', holdText: P0.holdNote || '',
-      addToQueue: () => this.setState({ queue: s.queue.concat([P0.id]), orders: s.orders.map((o) => (o.id === P0.id ? Object.assign({}, o, { prod: 'Waiting', lines: o.lines.map((y) => (y.type === 'Make' ? Object.assign({}, y, { status: 'Waiting' }) : y)) }) : o)),
+      addToQueue: () => this.setState({ queue: s.queue.concat([P0.id]), orders: s.orders.map((o) => (o.id === P0.id ? Object.assign({}, o, { ptl: (o.ptl || []).concat([{ stage: 'Added to queue', at: nowAt(), by: me }]), prod: 'Waiting', lines: o.lines.map((y) => (y.type === 'Make' ? Object.assign({}, y, { status: 'Waiting' }) : y)) }) : o)),
         log: [{ text: P0.id + ' added to the production queue at position ' + (s.queue.length + 1), detail: 'Added by ' + me + ' · 25 Nov 2026' }].concat(s.log) }),
       prodWaiting: P0.prod === 'Waiting' && posOf(P0.id) > 0, prodStarted: P0.prod === 'In production' || P0.prod === 'Ready for packing', prodDone: P0.prod === 'Ready for packing',
       prodChipText: P0.prod === 'In production' ? 'Added to production · being made now' : 'Production done',
@@ -1369,9 +1400,10 @@ class Component extends DCLogic {
         h.push({ date: P0.date, title: P0.prod === 'Not in queue' || s.log.some((g) => g.text.indexOf(P0.id + ' added to the production queue') === 0) ? 'PO received' : 'PO received and added to the production queue', detail: (P0.custPo ? 'Customer PO ' + P0.custPo + ' · ' : '') + 'production chart created' });
         P0.reminders.forEach((r, i) => h.push({ date: r.date, title: 'Customer reminder ' + (i + 1), detail: r.via + ': ' + r.note + (r.by ? ' · logged by ' + r.by : '') }));
         s.requests.filter((r) => r.po === P0.id).forEach((r) => h.push({ date: '25 Nov 2026', title: 'Priority request · ' + r.status, detail: 'Asked by ' + r.by + ': ' + r.reason }));
-        s.log.filter((g) => g.text.indexOf(P0.id) >= 0 && !/ added at position /.test(g.text)).forEach((g) => { const m = g.detail.match(/(\d{1,2} [A-Z][a-z]{2} \d{4})/); h.push({ date: m ? m[1] : '', title: g.text, detail: g.detail.replace(/ · \d{1,2} [A-Z][a-z]{2} \d{4}$/, '') }); });
-        if (P0.prodDone) h.push({ date: P0.prodDone, title: 'Production done', detail: 'Made items ready for packing' });
-        return h.sort((x, y) => (dayNo(y.date) || 99999999) - (dayNo(x.date) || 99999999));
+        s.log.filter((g) => g.text.indexOf(P0.id) >= 0 && !/ added at position | added to the production queue | started production| moved to | made items ready/.test(g.text)).forEach((g) => { const m = g.detail.match(/(\d{1,2} [A-Z][a-z]{2} \d{4})/); h.push({ date: m ? m[1] : '', title: g.text, detail: g.detail.replace(/ · \d{1,2} [A-Z][a-z]{2} \d{4}$/, '') }); });
+        (P0.ptl || []).forEach((e) => { const dm = String(e.at).split(', '); h.push({ date: dm[0], title: 'Production · ' + e.stage, detail: 'at ' + (dm[1] || '') + (e.by ? ' by ' + e.by : '') + (e.note ? ' · ' + e.note : '') }); });
+        if (P0.prodDone && !(P0.ptl || []).length) h.push({ date: P0.prodDone, title: 'Production done', detail: 'Made items ready for packing' });
+        return h.map((e, i) => Object.assign({ i: i }, e)).sort((x, y) => ((dayNo(y.date) || 99999999) - (dayNo(x.date) || 99999999)) || (y.i - x.i));
       })(),
       hasMake: chRows.length > 0, chartBtn: s.chartOpen ? 'Hide chart' : 'Show production chart',
       chart: { colour: CH.colour, logo: CH.logo, tape: CH.tape, zip: CH.zip, notes: CH.notes || 'None', custPo: P0.custPo || 'As per PO', target: minusDays(P0.deliver, 5), rows: chRows, total: chTotal.toLocaleString('en-IN') },
@@ -1392,41 +1424,68 @@ class Component extends DCLogic {
       readyBox: 'font-size: 14px; padding: 10px 12px; border-radius: 8px; ' + (readyLines === P0.lines.length ? 'background: #E7F4EC; color: #15803D' : 'background: #FBF1DF; color: #8A4B05')
     });
 
+    const stampOrder = (x, stage, extra) => Object.assign({}, x, extra || {}, { ptl: (x.ptl || []).concat([{ stage: stage, at: nowAt(), by: me }]) });
     const queueRows = s.queue.map((id, i) => {
       const o = ordersById[id];
       const rc = o.reminders.length;
       const hasReq = pendingFor(id);
+      const cs = curStage(o);
+      const ci = cs ? PSTAGES.indexOf(cs.stage) : 0;
+      const added = (o.ptl || []).find((e) => e.stage === 'Added to queue');
+      const dl = daysLeft(o.deliver);
+      const stageLabel = o.prod === 'Waiting' ? 'Waiting · ' + (i === 0 ? 'next to start' : i + ' ahead') : cs ? cs.stage : o.prod;
+      const tlEntries = (o.ptl || []).map((e, k, arr) => {
+        const nxt = arr.slice(k + 1).find((y) => PSTAGES.indexOf(y.stage) >= 0);
+        const isStage = PSTAGES.indexOf(e.stage) >= 0;
+        const isLast = isStage && !nxt;
+        const took = isStage ? (nxt ? 'took ' + durText(atMs(nxt.at) - atMs(e.at)) : 'running for ' + durText(NOWMS() - atMs(e.at))) : '';
+        return { stage: e.stage, at: e.at, detail: [e.by ? 'by ' + e.by : '', took, e.note || ''].filter(Boolean).join(' · '),
+          dot: 'width: 10px; height: 10px; border-radius: 50%; margin-top: 3px; background: ' + (!isStage ? '#2563EB' : isLast ? '#C2410C' : '#15803D') };
+      });
+      const advance = () => {
+        const nextStage = PSTAGES[ci + 1];
+        if (nextStage === 'Ready for packing') {
+          const q = s.queue.filter((x) => x !== id);
+          this.setState({ queue: q, orders: s.orders.map((x) => (x.id === id ? stampOrder(x, 'Ready for packing', { prod: 'Ready for packing', prodDone: '25 Nov 2026', lines: x.lines.map((y) => (y.type === 'Make' ? Object.assign({}, y, { status: 'Ready' }) : y)) }) : x)),
+            log: [{ text: id + ' made items ready, moved to Dispatch', detail: 'Updated by ' + me + ' · 25 Nov 2026' }].concat(s.log) });
+        } else {
+          this.setState({ orders: s.orders.map((x) => (x.id === id ? stampOrder(x, nextStage) : x)), log: [{ text: id + ' moved to ' + nextStage, detail: 'Updated by ' + me + ' · 25 Nov 2026' }].concat(s.log) });
+        }
+      };
+      const someInProd = s.orders.some((x) => x.prod === 'In production');
       return {
-        rowStyle: s.prodFocus === id ? 'border-bottom: 1px solid #EFEFEA; background: #FDEEE6; box-shadow: inset 4px 0 0 #C2410C' : 'border-bottom: 1px solid #EFEFEA',
         id: id, pos: i + 1, customer: o.customer, deliver: o.deliver, prod: o.prod, make: makeText(o),
+        since: added ? added.at : o.date, waitText: added ? durText(NOWMS() - atMs(added.at)) + ' in the queue' : '',
+        stage: stageLabel, stagePill: pill(o.prod === 'In production' ? 'blue' : o.prod === 'Waiting' ? 'neutral' : 'green'),
+        stageSince: o.prod === 'In production' && cs ? 'since ' + cs.at + ' · ' + durText(NOWMS() - atMs(cs.at)) : o.prod === 'Waiting' ? 'Production not started' : '',
+        bar: PSTAGES.slice(1, 6).map((st, k) => ({ style: 'height: 6px; flex: 1; border-radius: 3px; background: ' + (o.prod === 'In production' && k + 1 < ci ? '#15803D' : o.prod === 'In production' && k + 1 === ci ? '#C2410C' : '#E4E4DE') })),
+        daysText: dl.text, daysStyle: dl.style,
         pillStyle: pill(prodKind(o.prod)),
         remText: rc ? rc + ' customer reminder' + (rc > 1 ? 's' : '') : 'No reminders',
         remStyle: 'font-size: 13px; ' + (rc ? 'color: #B91C1C; font-weight: 600' : 'color: #5D6470'),
-        canRequest: o.prod === 'Waiting' && !hasReq && i > 1,
-        canFinish: admin && o.prod === 'In production',
-        finish: () => {
-          const q = s.queue.filter((x) => x !== id);
-          const nextId = q[0];
-          const orders = s.orders.map((x) => {
-            if (x.id === id) return Object.assign({}, x, { prod: 'Ready for packing', prodDone: '25 Nov 2026', lines: x.lines.map((y) => (y.type === 'Make' ? Object.assign({}, y, { status: 'Ready' }) : y)) });
-            if (x.id === nextId && x.prod === 'Waiting') return Object.assign({}, x, { prod: 'In production', lines: x.lines.map((y) => (y.type === 'Make' ? Object.assign({}, y, { status: 'In production' }) : y)) });
-            return x;
-          });
-          this.setState({ queue: q, orders: orders, log: [{ text: id + ' made items ready, moved to Dispatch', detail: (nextId ? nextId + ' started production · ' : '') + 'Updated by ' + me + ' · 25 Nov 2026' }].concat(s.log) });
-        },
+        canRequest: o.prod === 'Waiting' && !hasReq && i > 0,
+        canStart: admin && o.prod === 'Waiting' && i === 0 && !someInProd,
+        start: () => this.setState({ orders: s.orders.map((x) => (x.id === id ? stampOrder(x, 'Cutting', { prod: 'In production', lines: x.lines.map((y) => (y.type === 'Make' ? Object.assign({}, y, { status: 'In production' }) : y)) }) : x)), log: [{ text: id + ' started production (cutting)', detail: 'Updated by ' + me + ' · 25 Nov 2026' }].concat(s.log) }),
+        canNext: admin && o.prod === 'In production', nextLabel: PSTAGES[ci + 1] === 'Ready for packing' ? 'Mark ready for packing' : 'Move to ' + (PSTAGES[ci + 1] || '').replace('Logo printing / embroidery', 'logo / embroidery').toLowerCase(), next: advance,
+        canFinish: false, finish: advance,
+        tl: tlEntries, tlOpen: s.openTl === id, tlExpanded: s.openTl === id ? 'true' : 'false', tlLabel: s.openTl === id ? 'Hide timeline' : 'Timeline',
+        toggleTl: () => this.setState({ openTl: s.openTl === id ? '' : id }),
+        hasNextUp: o.prod !== 'Ready for packing', nextUp: o.prod === 'Waiting' ? 'Cutting (production start)' : (PSTAGES[ci + 1] || ''),
         hasReq: hasReq, reqPill: pill('amber'),
         reqOpen: s.reqFor === id,
         reasonVal: s.reqReason,
         setReason: (e) => this.setState({ reqReason: e.target.value }),
         openReq: () => this.setState({ reqFor: id, reqReason: '' }),
         closeReq: () => this.setState({ reqFor: '' }),
-        submitReq: (e) => {
-          if (e && e.preventDefault) e.preventDefault();
-          const reason = s.reqReason.trim() || 'Urgent customer request';
-          this.setState({ reqFor: '', reqReason: '', requests: s.requests.concat([{ id: 'R' + (s.requests.length + 1), po: id, by: me, reason: reason, status: 'Pending' }]) });
-        },
-        open: goTo('po', { poId: id })
+        open: goTo('po', { poId: id, chartOpen: false, remOpen: false })
       };
+    });
+    const boardCols = [{ k: 'nq', label: 'Not in queue' }, { k: 'w', label: 'Waiting' }].concat(PSTAGES.slice(1, 6).map((st) => ({ k: st, label: st.replace('Logo printing / embroidery', 'Logo / embroidery') }))).concat([{ k: 'r', label: 'Ready for packing' }]);
+    const board = boardCols.map((c) => {
+      const os = s.orders.filter((o) => (c.k === 'nq' ? o.prod === 'Not in queue' : c.k === 'w' ? o.prod === 'Waiting' : c.k === 'r' ? o.prod === 'Ready for packing' : o.prod === 'In production' && curStage(o) && curStage(o).stage === c.k));
+      const live = c.k !== 'nq' && c.k !== 'w' && c.k !== 'r';
+      return { label: c.label, count: String(os.length), items: os.map((o) => ({ text: o.id + ' · ' + o.customer.split(' ')[0], open: goTo('po', { poId: o.id, chartOpen: false }) })),
+        style: 'border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px; min-height: 92px; box-sizing: border-box; ' + (live && os.length ? 'background: #FDEEE6; border: 1px solid #E9B99B' : 'background: #FFFFFF; border: 1px solid #E4E4DE') };
     });
     const PFi = s.queue.indexOf(s.prodFocus);
     const PFo = PFi >= 0 ? ordersById[s.prodFocus] : null;
@@ -1789,7 +1848,7 @@ class Component extends DCLogic {
           lines: [{ item: 'Reflective Safety Jacket', size: 'M / L / XL', qty: '200 / 300 / 100', type: 'Make', status: 'Waiting' }, { item: 'Safety gloves', size: '9', qty: '600', type: 'Buy-in', status: 'To buy' }], reminders: [] };
         Object.assign(o, { custPo: String(up.custPo).trim(), date: this.fmt(up.date), deliver: this.fmt(up.deliver), ldStart: minusDays(this.fmt(up.deliver), -1), ld: up.ld, terms: up.terms,
           lines: goodLines.map((x) => ({ item: x.item.trim(), size: (x.size || '').trim() || 'Free size', qty: x.qty.trim(), type: x.type, status: x.type === 'Make' ? (s.upQueueNow === false ? 'Not started' : 'Waiting') : 'To buy' })) });
-        const qNow = s.upQueueNow !== false; if (!qNow) { o.prod = 'Not in queue'; o.holdNote = 'Saved without adding to the production queue.'; }
+        const qNow = s.upQueueNow !== false; o.ptl = qNow ? [{ stage: 'Added to queue', at: nowAt(), by: me }] : []; if (!qNow) { o.prod = 'Not in queue'; o.holdNote = 'Saved without adding to the production queue.'; }
         const repeat = isClient(upTarget);
         this.setState({ orders: s.orders.concat([o]), queue: qNow ? s.queue.concat([newId]) : s.queue, uploadOpen: false, uploadDone: true, upRepeat: false, lastUp: newId, chartOpen: true, uploadCount: s.uploadCount + 1, upErr: '', leadPoSel: newId,
           uploadMsg: newId + (repeat ? ' saved for the client ' : ' saved under the lead ') + upTarget.name + (repeat ? ' (repeat order)' : '. The lead has moved from Leads to Clients') + (qNow ? '. A production queue entry was created at position ' + (s.queue.length + 1) + ' and its production chart is ready to print.' : '. It is not in the production queue yet. Open the PO and click Add to production queue when ready.'),
@@ -1817,7 +1876,7 @@ class Component extends DCLogic {
       },
       logReminder: () => this.setState({ orders: s.orders.map((o) => (o.id === P0.id ? Object.assign({}, o, { reminders: o.reminders.concat([{ date: '25 Nov 2026', via: 'Email (PDF uploaded)', note: 'Customer asked for an update on delivery.' }]) }) : o)) }),
 
-      queueRows: queueRows, pf: pf,
+      queueRows: queueRows, pf: pf, board: board,
       remLog: remLog, noRemLog: remLog.length === 0,
       remLogSub: remAll.length + ' in total across ' + new Set(remAll.map((r) => r.po)).size + ' orders.',
       remFilters: remPeople.map((n) => ({ label: n === 'All' ? 'All' : n + ' (' + remAll.filter((r) => r.by === n).length + ')', style: chip(s.remFilter === n), pick: () => this.setState({ remFilter: n }) })), log: s.log, lastApprover: s.lastApprover,
