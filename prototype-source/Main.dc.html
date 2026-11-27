@@ -772,7 +772,45 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 
 <sc-if value="{{ isDisp }}" hint-placeholder-val="{{ false }}">
 <div style="display: flex; flex-direction: column; gap: 16px">
-<div><h1 style="margin: 0; font-size: 24px">Dispatch and tracking</h1><p class="muted" style="margin: 4px 0 0">Comes from: orders whose made items are ready and bought-in items received. Pack, print box labels, add the Busy invoice and LR number, then track until delivered.</p></div>
+<sc-if value="{{ sf.open }}" hint-placeholder-val="{{ false }}">
+<div class="modal-bg" onClick="{{ modalBg }}" onKeyDown="{{ modalKey }}"><div class="modal" role="dialog" aria-modal="true" aria-label="Log a follow-up · {{ sf.title }}"><div class="modal-head"><h2 style="margin: 0; font-size: 18px">Log a follow-up · {{ sf.title }}</h2><button type="button" class="xbtn" aria-label="Close" onClick="{{ closeAll }}">×</button></div>
+<p class="muted" style="margin: 0; font-size: 14px">{{ sf.info }}</p>
+<form style="display: flex; flex-direction: column; gap: 12px" onSubmit="{{ sf.save }}">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+<div><label class="lbl" for="sf-how">How</label><select id="sf-how" class="field" value="{{ sf.how }}" onChange="{{ sf.set.how }}"><option>Called transporter</option><option>Emailed transporter</option><option>WhatsApp to transporter</option><option>Visited transporter office</option><option>Called customer</option></select></div>
+<div><label class="lbl" for="sf-who">Spoke to</label><input id="sf-who" class="field" type="text" value="{{ sf.who }}" onChange="{{ sf.set.who }}" placeholder="e.g. TCI Chennai branch, Mr. Kumar"></div>
+<div><label class="lbl" for="sf-exp">New expected delivery (if given)</label><input id="sf-exp" class="field" type="date" value="{{ sf.exp }}" onChange="{{ sf.set.exp }}"></div>
+</div>
+<div><label class="lbl" for="sf-note">What they said *</label><textarea id="sf-note" class="field" rows="3" value="{{ sf.note }}" onChange="{{ sf.set.note }}" placeholder="e.g. stuck at Chennai hub due to vehicle breakdown, delivery by 27 Nov"></textarea></div>
+<sc-if value="{{ sf.hasErr }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; color: #B91C1C; font-size: 14px; font-weight: 600">{{ sf.err }}</p></sc-if>
+<div style="display: flex; gap: 8px"><button class="btn btn-primary" type="submit">Save follow-up</button><button class="btn" type="button" onClick="{{ closeAll }}">Cancel</button></div>
+</form>
+</div></div>
+</sc-if>
+<sc-if value="{{ su.open }}" hint-placeholder-val="{{ false }}">
+<div class="modal-bg" onClick="{{ modalBg }}" onKeyDown="{{ modalKey }}"><div class="modal" role="dialog" aria-modal="true" aria-label="Update status · {{ su.title }}"><div class="modal-head"><h2 style="margin: 0; font-size: 18px">Update status · {{ su.title }}</h2><button type="button" class="xbtn" aria-label="Close" onClick="{{ closeAll }}">×</button></div>
+<p class="muted" style="margin: 0; font-size: 14px">Use this for transporters whose website cannot be read automatically, or to record the delivery.</p>
+<form style="display: flex; flex-direction: column; gap: 12px" onSubmit="{{ su.save }}">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px">
+<div><label class="lbl" for="su-stage">New status</label><select id="su-stage" class="field" value="{{ su.stage }}" onChange="{{ su.set.stage }}"><option>In transit</option><option>Out for delivery</option><option>Delivered</option></select></div>
+<div><label class="lbl" for="su-place">Where</label><input id="su-place" class="field" type="text" value="{{ su.place }}" onChange="{{ su.set.place }}" placeholder="e.g. Nagpur hub"></div>
+<div><label class="lbl" for="su-date">Date</label><input id="su-date" class="field" type="date" value="{{ su.date }}" onChange="{{ su.set.date }}"></div>
+<div><label class="lbl" for="su-time">Time</label><input id="su-time" class="field" type="time" value="{{ su.time }}" onChange="{{ su.set.time }}"></div>
+</div>
+<sc-if value="{{ su.isDelivered }}" hint-placeholder-val="{{ false }}"><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+<div><label class="lbl" for="su-recv">Received by *</label><input id="su-recv" class="field" type="text" value="{{ su.recv }}" onChange="{{ su.set.recv }}" placeholder="Name and role at the customer"></div>
+<div><label class="lbl" for="su-pod">Proof of delivery (signed copy)</label><input id="su-pod" class="field" type="file" onChange="{{ su.setPod }}"></div>
+</div></sc-if>
+<div><label class="lbl" for="su-note">Note (optional)</label><input id="su-note" class="field" type="text" value="{{ su.note }}" onChange="{{ su.set.note }}"></div>
+<sc-if value="{{ su.hasErr }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; color: #B91C1C; font-size: 14px; font-weight: 600">{{ su.err }}</p></sc-if>
+<div style="display: flex; gap: 8px"><button class="btn btn-primary" type="submit">Save status</button><button class="btn" type="button" onClick="{{ closeAll }}">Cancel</button></div>
+</form>
+</div></div>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-end"><div><h1 style="margin: 0; font-size: 24px">Dispatch and tracking</h1><p class="muted" style="margin: 4px 0 0">Pack ready orders, then follow every shipment until it is delivered. Each update is saved with date, time and source.</p></div><span class="muted" style="font-size: 13px">Transporter websites last checked: today, 09:00 (checked every morning)</span></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px">
+<sc-for list="{{ dboard }}" as="b" hint-placeholder-count="5"><button style="{{ b.style }}" onClick="{{ b.pick }}"><span style="font-size: 12px; font-weight: 700; color: #5D6470; text-transform: uppercase; letter-spacing: .04em">{{ b.label }}</span><span style="{{ b.numStyle }}">{{ b.count }}</span><span class="muted" style="font-size: 12px">{{ b.hint }}</span></button></sc-for>
+</div>
 <sc-if value="{{ dispatchMsg }}" hint-placeholder-val="{{ false }}"><section class="card" style="background: #E7F4EC; border-color: #A7D7B8; font-size: 14px">{{ dispatchMsg }}</section></sc-if>
 <section class="card" style="display: flex; flex-direction: column; gap: 4px">
 <h2 style="margin: 0; font-size: 16px">Step 1 · Ready to pack and dispatch</h2>
@@ -786,10 +824,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </sc-for>
 </section>
 <sc-if value="{{ pk.open }}" hint-placeholder-val="{{ false }}">
-<section class="card" style="display: flex; flex-direction: column; gap: 16px; border-color: #BFD0F7">
+<div class="modal-bg" onClick="{{ modalBg }}" onKeyDown="{{ modalKey }}"><section class="modal modal-lg" role="dialog" aria-modal="true" aria-label="Pack and dispatch" style="gap: 16px">
 <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap"><h2 style="margin: 0; font-size: 18px">Pack and dispatch {{ pk.id }} · {{ pk.customer }}</h2><button class="btn btn-sm noprint" onClick="{{ closePack }}">Close</button></div>
 <div class="noprint" style="display: flex; flex-direction: column; gap: 12px">
-<h3 style="margin: 0; font-size: 15px">Step 2 · Delivery address and boxes</h3>
+<h3 style="margin: 0; font-size: 15px">1 · Delivery address and boxes</h3>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px">
 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px">
 <span class="lbl" style="margin: 0">Deliver to (this exact address is printed on every box label and saved with the dispatch)</span>
@@ -806,7 +844,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 </div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 10px">
-<h3 class="noprint" style="margin: 0; font-size: 15px">Step 3 · Box labels</h3>
+<h3 class="noprint" style="margin: 0; font-size: 15px">2 · Box labels</h3>
 <p class="muted noprint" style="margin: 0; font-size: 13px">One label per box, made by the system. Print and paste on the boxes. You can also upload a photo of the pasted labels as proof.</p>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px">
 <sc-for list="{{ pk.labels }}" as="lb" hint-placeholder-count="3">
@@ -822,7 +860,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <div class="noprint" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center"><button class="btn btn-primary btn-sm" onClick="{{ doPrint }}">Print {{ pk.boxCount }} box labels</button><button class="btn btn-sm" onClick="{{ togglePhoto }}">{{ pk.photoBtn }}</button><sc-if value="{{ pk.photo }}" hint-placeholder-val="{{ false }}"><span style="{{ pk.photoPill }}">labels-photo.jpg attached</span></sc-if></div>
 </div>
 <div class="noprint" style="display: flex; flex-direction: column; gap: 12px">
-<h3 style="margin: 0; font-size: 15px">Step 4 · Invoice and transporter</h3>
+<h3 style="margin: 0; font-size: 15px">3 · Invoice and transporter</h3>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
 <div><label class="lbl" for="pk-inv">Invoice number (picked up from Busy)</label><input id="pk-inv" class="field" type="text" value="{{ pk.inv }}" onChange="{{ setPkInv }}"></div>
 <div><label class="lbl" for="pk-car">Transporter or courier</label><select id="pk-car" class="field" value="{{ pk.carrier }}" onChange="{{ setPkCarrier }}"><option>TCI</option><option>DTDC</option><option>Gati</option><option>Safexpress</option><option>Delhivery</option><option>VRL Logistics</option></select></div>
@@ -832,43 +870,44 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <sc-if value="{{ pk.hasErr }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; color: #B91C1C; font-size: 14px; font-weight: 600">{{ pk.err }}</p></sc-if>
 <div><button class="btn btn-primary" onClick="{{ savePack }}">Save dispatch</button></div>
 </div>
-</section>
+</section></div>
 </sc-if>
-<h2 class="noprint" style="margin: 8px 0 0; font-size: 16px">Step 5 · Shipments on the way</h2>
-<div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{ shipFilters }}" as="f" hint-placeholder-count="4"><button style="{{ f.style }}" onClick="{{ f.pick }}">{{ f.label }}</button></sc-for></div>
+<h2 class="noprint" style="margin: 8px 0 0; font-size: 16px">Step 2 · Shipments</h2>
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><sc-for list="{{ shipFilters }}" as="f" hint-placeholder-count="5"><button style="{{ f.style }}" onClick="{{ f.pick }}">{{ f.label }}</button></sc-for></div>
 <div class="card" style="padding: 0; overflow-x: auto">
-<div style="min-width: 960px">
-<div class="th" style="grid-template-columns: 100px minmax(170px, 2fr) minmax(170px, 1.6fr) 110px 110px 130px 100px"><span>Invoice</span><span>Customer / to</span><span>Carrier / tracking no.</span><span>Dispatched</span><span>Expected</span><span>Status</span><span></span></div>
+<div style="min-width: 1140px">
+<div class="th" style="grid-template-columns: 110px minmax(150px, 1.3fr) minmax(140px, 1.2fr) 120px 130px minmax(180px, 1.6fr) 130px 150px"><span>Invoice / PO</span><span>Customer / to</span><span>Transporter / LR</span><span>Dispatched</span><span>Expected</span><span>Last update</span><span>Status</span><span></span></div>
+<sc-if value="{{ noShipRows }}" hint-placeholder-val="{{ false }}"><p class="muted" style="margin: 0; padding: 14px 16px; font-size: 14px">No shipments with this status.</p></sc-if>
 <sc-for list="{{ shipRows }}" as="s" hint-placeholder-count="5">
 <div style="border-bottom: 1px solid #EFEFEA">
-<div class="tr" style="grid-template-columns: 100px minmax(170px, 2fr) minmax(170px, 1.6fr) 110px 110px 130px 100px; border-bottom: 0">
-<strong>{{ s.inv }}</strong>
+<div class="tr" style="grid-template-columns: 110px minmax(150px, 1.3fr) minmax(140px, 1.2fr) 120px 130px minmax(180px, 1.6fr) 130px 150px; border-bottom: 0; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 2px"><strong>{{ s.inv }}</strong><span class="muted" style="font-size: 13px">{{ s.poShort }}</span></div>
 <div style="display: flex; flex-direction: column; gap: 2px"><span>{{ s.customer }}</span><span class="muted" style="font-size: 13px">to {{ s.dest }}</span></div>
 <div style="display: flex; flex-direction: column; gap: 2px"><span>{{ s.carrier }}</span><span class="muted" style="font-size: 13px">{{ s.lr }}</span></div>
-<span>{{ s.sent }}</span>
-<span>{{ s.exp }}</span>
-<span><span style="{{ s.pillStyle }}">{{ s.late }}</span></span>
-<button class="btn btn-sm" onClick="{{ s.toggle }}">{{ s.toggleLabel }}</button>
+<span style="font-size: 13px">{{ s.sentAt }}</span>
+<div style="display: flex; flex-direction: column; gap: 2px; font-size: 13px"><span>{{ s.exp }}</span><span style="{{ s.expStyle }}">{{ s.expText }}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px; font-size: 13px"><span>{{ s.lastText }}</span><span class="muted" style="font-size: 12px">{{ s.lastMeta }}</span></div>
+<span><span style="{{ s.pillStyle }}">{{ s.statusText }}</span></span>
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start">
+<button class="btn btn-sm" aria-expanded="{{ s.expanded }}" onClick="{{ s.toggle }}">{{ s.toggleLabel }}</button>
+<sc-if value="{{ s.canAct }}" hint-placeholder-val="{{ true }}"><button class="btn btn-sm" onClick="{{ s.openFollow }}">Log follow-up</button><button class="btn btn-sm" onClick="{{ s.openUpdate }}">Update status</button></sc-if>
+</div>
 </div>
 <sc-if value="{{ s.open }}" hint-placeholder-val="{{ false }}">
-<div style="padding: 0 16px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; font-size: 14px">
+<div style="padding: 0 16px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; align-content: start">
 <div><div class="lbl">Against PO</div><div>{{ s.po }}</div></div>
-<div><div class="lbl">Packing (box-wise)</div><div>{{ s.boxes }}</div></div>
-<div><div class="lbl">Delivery address</div><div style="white-space: pre-line">{{ s.addrText }}</div></div>
 <div><div class="lbl">Invoice envelope sent to</div><div>{{ s.env }}</div></div>
+<div style="grid-column: 1 / -1"><div class="lbl">Packing (box-wise)</div><div>{{ s.boxes }}</div></div>
+<div><div class="lbl">Delivery address</div><div style="white-space: pre-line">{{ s.addrText }}</div></div>
 <div><div class="lbl">Box labels</div><div>{{ s.labelText }}</div><sc-if value="{{ s.hasLabels }}" hint-placeholder-val="{{ false }}"><button class="btn btn-sm" style="margin-top: 6px" onClick="{{ s.toggleLabels }}">{{ s.labelsBtn }}</button></sc-if></div>
-<sc-if value="{{ s.showLabels }}" hint-placeholder-val="{{ false }}">
-<div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px">
-<span class="muted" style="font-size: 13px">Copy of the labels printed for this dispatch on {{ s.sent }}. This is the proof of where the goods were sent.</span>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px">
-<sc-for list="{{ s.labels }}" as="lb" hint-placeholder-count="2"><div style="border: 2px solid #1B1E23; border-radius: 6px; padding: 10px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; background: #FFFFFF"><div style="display: flex; justify-content: space-between"><strong style="letter-spacing: .1em">DELIVERY</strong><strong>BOX {{ lb.n }} OF {{ lb.total }}</strong></div><div style="white-space: pre-line; font-weight: 600">{{ lb.to }}</div><div>{{ lb.text }}</div><div class="muted">{{ lb.po }} · {{ lb.inv }} · {{ lb.lr }}</div></div></sc-for>
+<sc-if value="{{ s.showLabels }}" hint-placeholder-val="{{ false }}"><div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px"><sc-for list="{{ s.labels }}" as="lb" hint-placeholder-count="2"><div style="border: 2px solid #1B1E23; border-radius: 6px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 4px; background: #FFFFFF"><div style="display: flex; justify-content: space-between"><strong>DELIVERY</strong><strong>BOX {{ lb.n }} OF {{ lb.total }}</strong></div><div style="white-space: pre-line; font-weight: 600">{{ lb.to }}</div><div>{{ lb.text }}</div><div class="muted">{{ lb.po }} · {{ lb.inv }} · {{ lb.lr }}</div></div></sc-for></div></sc-if>
+<sc-if value="{{ s.hasPod }}" hint-placeholder-val="{{ false }}"><div style="grid-column: 1 / -1"><div class="lbl">Proof of delivery</div><div>{{ s.podText }}</div></div></sc-if>
 </div>
-</div>
-</sc-if>
-<div><div class="lbl">Follow-up</div>
-<sc-if value="{{ s.needsFollow }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary btn-sm" onClick="{{ s.followUp }}">Mark transporter followed up</button></sc-if>
-<sc-if value="{{ s.hasFollow }}" hint-placeholder-val="{{ false }}"><div>{{ s.follow }}</div></sc-if>
-<sc-if value="{{ s.noFollowNeeded }}" hint-placeholder-val="{{ false }}"><div class="muted">Not needed</div></sc-if>
+<div style="display: flex; flex-direction: column">
+<span class="lbl">Tracking timeline</span>
+<div aria-hidden="true" style="display: flex; gap: 2px; margin-bottom: 8px"><sc-for list="{{ s.bar }}" as="seg" hint-placeholder-count="5"><span style="{{ seg.style }}"></span></sc-for></div>
+<sc-for list="{{ s.tl }}" as="t" hint-placeholder-count="4"><div style="display: grid; grid-template-columns: 14px 1fr; gap: 10px; padding: 6px 0; border-top: 1px solid #EFEFEA; font-size: 13px"><span style="{{ t.dot }}"></span><div style="display: flex; flex-direction: column; gap: 2px"><span><strong>{{ t.stage }}</strong>{{ t.place }}</span><span class="muted">{{ t.at }} · {{ t.src }}</span><sc-if value="{{ t.hasNote }}" hint-placeholder-val="{{ false }}"><span>{{ t.note }}</span></sc-if></div></div></sc-for>
 </div>
 </div>
 </sc-if>
@@ -1070,6 +1109,17 @@ class Component extends DCLogic {
       'PO-4425': [{ stage: 'Added to queue', at: '6 Nov 2026, 11:00', by: 'Rohit' }, { stage: 'Cutting', at: '12 Nov 2026, 09:00', by: 'Owner' }, { stage: 'Stitching', at: '14 Nov 2026, 10:30', by: 'Owner' }, { stage: 'Logo printing / embroidery', at: '17 Nov 2026, 14:00', by: 'Owner' }, { stage: 'Reflective tape', at: '19 Nov 2026, 11:15', by: 'Owner' }, { stage: 'Quality check', at: '21 Nov 2026, 16:00', by: 'Owner' }, { stage: 'Ready for packing', at: '22 Nov 2026, 12:30', by: 'Owner' }]
     };
     this.state.orders = this.state.orders.map((o) => Object.assign({}, o, { ptl: o.ptl || PTL[o.id] || [] }));
+    const A = (stage, at, src, place, note) => ({ stage: stage, at: at, src: src, place: place || '', note: note || '' });
+    const TRK = {
+      S1: [A('Packed', '4 Nov 2026, 17:20', 'by Owner', '', '3 boxes'), A('Dispatched', '5 Nov 2026, 11:00', 'by Owner', 'Faridabad', 'Handed to TCI, LR 171754483'), A('In transit', '6 Nov 2026, 08:10', 'auto', 'Delhi hub'), A('In transit', '9 Nov 2026, 14:30', 'auto', 'Nagpur hub'), A('In transit', '12 Nov 2026, 19:45', 'auto', 'Chennai hub'), A('Follow-up', '20 Nov 2026, 11:30', 'by Owner', '', 'Called TCI Chennai: waiting for local vehicle, no new date given.')],
+      S2: [A('Packed', '11 Nov 2026, 16:00', 'by Owner', '', '2 boxes'), A('Dispatched', '12 Nov 2026, 10:30', 'by Owner', 'Faridabad', 'Handed to DTDC, docket 7Z9910234'), A('In transit', '14 Nov 2026, 06:20', 'auto', 'Mumbai hub'), A('Out for delivery', '16 Nov 2026, 09:30', 'auto', 'Mumbai'), A('Delivered', '16 Nov 2026, 15:10', 'auto', 'Mumbai port stores', 'Received by F. Shaikh (Stores in-charge)')],
+      S3: [A('Packed', '14 Nov 2026, 18:00', 'by Owner', '', '1 box'), A('Dispatched', '15 Nov 2026, 11:15', 'by Owner', 'Faridabad', 'Handed to TCI, LR 171760221'), A('In transit', '17 Nov 2026, 07:50', 'auto', 'Ahmedabad hub'), A('In transit', '19 Nov 2026, 13:05', 'auto', 'Vadodara hub')],
+      S4: [A('Packed', '19 Nov 2026, 17:40', 'by Owner', '', '4 boxes'), A('Dispatched', '20 Nov 2026, 10:00', 'by Owner', 'Faridabad', 'Handed to Gati, docket 5512098811'), A('In transit', '24 Nov 2026, 22:15', 'auto', 'Kolkata hub')],
+      S5: [A('Packed', '22 Nov 2026, 18:30', 'by Owner', '', '1 box'), A('Dispatched', '23 Nov 2026, 09:45', 'by Owner', 'Faridabad', 'Handed to DTDC, docket 7Z9934410'), A('In transit', '25 Nov 2026, 07:40', 'auto', 'Jaipur hub'), A('Out for delivery', '25 Nov 2026, 10:15', 'auto', 'Jaipur')],
+      S6: [A('Packed', '23 Oct 2026, 17:00', 'by Owner', '', '6 boxes'), A('Dispatched', '24 Oct 2026, 10:20', 'by Owner', 'Faridabad', 'Handed to TCI, LR 171702116'), A('In transit', '26 Oct 2026, 08:00', 'auto', 'Jaipur hub'), A('Delivered', '28 Oct 2026, 14:40', 'by Rohit', 'Jaipur site office', 'Received by L. Agarwal (Purchase Manager) · proof of delivery uploaded')]
+    };
+    this.state.shipments = this.state.shipments.map((x) => Object.assign({}, x, { trk: x.trk || TRK[x.id] || [] }));
+    Object.assign(this.state, { sfFor: '', sfF: {}, sfErr: '', suFor: '', suF: {}, suErr: '' });
     let k = 0;
     const slug = (n) => n.toLowerCase().replace(/[^a-z]+/g, '.').replace(/^\.+|\.+$/g, '');
     this.state.leads = this.state.leads.map((l) => {
@@ -1173,7 +1223,7 @@ class Component extends DCLogic {
     const minusDays = (txt, n) => { const p = String(txt).split(' '); const d = new Date(Number(p[2]), MON.indexOf(p[1]), Number(p[0])); if (isNaN(d)) return txt; d.setDate(d.getDate() - n); return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear(); };
     const stdOf = (p) => { const a = []; if (/(^|, )FR /.test(p)) a.push('IS 15748:2022 (BIS)'); if (/Reflective (Safety Jacket|Vest)|Auto-Glow|LED/.test(p)) a.push('IS 15809:2017 (BIS) · EN ISO 20471'); if (/tape/i.test(p)) a.push('3M Scotchlite'); return a.length ? a.join(' · ') : 'As agreed with customer'; };
     const digits = (t) => String(t || '').replace(/[^0-9]/g, '');
-    const closeAll = () => this.setState({ newLeadOpen: false, lostOpen: false, docOpen: false, aiOpen: false, actOpen: false, contactOpen: false, docView: '', remOpen: false, reqFor: '', uploadOpen: false, notifOpen: false });
+    const closeAll = () => this.setState({ newLeadOpen: false, lostOpen: false, docOpen: false, aiOpen: false, actOpen: false, contactOpen: false, docView: '', remOpen: false, reqFor: '', uploadOpen: false, notifOpen: false, packFor: '', sfFor: '', suFor: '' });
     const dayNo = (t) => { const q = String(t).split(' '); const d = new Date(Number(q[2]), MON.indexOf(q[1]), Number(q[0])); return isNaN(d) ? NaN : Math.round(d.getTime() / 86400000); };
     const daysLeft = (t) => { const n = dayNo(t) - dayNo('25 Nov 2026'); if (isNaN(n)) return { text: '', style: '' }; return n < 0 ? { text: 'Late by ' + (-n) + ' day' + (n === -1 ? '' : 's'), style: 'font-size: 13px; color: #B91C1C; font-weight: 600' } : n === 0 ? { text: 'Due today', style: 'font-size: 13px; color: #B91C1C; font-weight: 600' } : { text: n + ' day' + (n === 1 ? '' : 's') + ' left', style: 'font-size: 13px; ' + (n <= 7 ? 'color: #B45309; font-weight: 600' : 'color: #5D6470') }; };
     const sumQty = (q) => String(q).split('/').reduce((t, x) => t + (Number(String(x).replace(/[^0-9]/g, '')) || 0), 0);
@@ -1504,19 +1554,58 @@ class Component extends DCLogic {
     }));
 
     const shipKind = { overdue: 'red', transit: 'blue', delivered: 'green' };
-    const shipMatch = (x) => (s.shipFilter === 'All' ? true : s.shipFilter === 'Overdue' ? x.state === 'overdue' : s.shipFilter === 'In transit' ? x.state !== 'delivered' : x.state === 'delivered');
-    const shipRows = s.shipments.filter(shipMatch).map((x) => Object.assign({}, x, {
-      pillStyle: pill(shipKind[x.state]), open: s.openShip === x.id,
-      addrText: x.addr || (x.env.split(', ').slice(1).join(', ')),
-      labelText: x.labels ? x.labels.length + ' labels printed from the system' + (x.labelPhoto ? ' · photo of pasted labels attached' : '') : 'Sent before go-live (no label copy)',
-      hasLabels: !!x.labels, showLabels: !!x.labels && s.viewLabels === x.id, labels: x.labels || [],
-      labelsBtn: s.viewLabels === x.id ? 'Hide labels' : 'View printed labels',
-      toggleLabels: () => this.setState({ viewLabels: s.viewLabels === x.id ? '' : x.id }),
-      toggleLabel: s.openShip === x.id ? 'Hide' : 'Details',
-      toggle: () => this.setState({ openShip: s.openShip === x.id ? '' : x.id }),
-      needsFollow: x.state === 'overdue' && !x.follow, hasFollow: !!x.follow, noFollowNeeded: x.state !== 'overdue' && !x.follow,
-      followUp: () => this.setState({ shipments: s.shipments.map((y) => (y.id === x.id ? Object.assign({}, y, { follow: 'Transporter emailed on 25 Nov 2026 by ' + me + '. Promised delivery by 27 Nov.' }) : y)) })
-    }));
+    const TST = ['Packed', 'Dispatched', 'In transit', 'Out for delivery', 'Delivered'];
+    const lastStage = (x) => { const st = (x.trk || []).filter((e) => TST.indexOf(e.stage) >= 0); return st.length ? st[st.length - 1] : null; };
+    const shipStatus = (x) => { if (x.state === 'delivered') return 'Delivered'; const ls = lastStage(x); if (x.state === 'overdue') return 'Overdue'; return ls && ls.stage === 'Out for delivery' ? 'Out for delivery' : 'In transit'; };
+    const shipFilterList = ['All', 'Overdue', 'In transit', 'Out for delivery', 'Delivered'];
+    const shipMatch = (x, f) => (f === 'All' ? true : shipStatus(x) === f);
+    const shipRows = s.shipments.filter((x) => shipMatch(x, s.shipFilter || 'All')).map((x) => {
+      const st = shipStatus(x); const ls = lastStage(x); const all = x.trk || []; const last = all[all.length - 1];
+      const sent = all.find((e) => e.stage === 'Dispatched'); const deliv = all.find((e) => e.stage === 'Delivered');
+      const n = dayNo(x.exp) - dayNo('25 Nov 2026');
+      const e0 = x.exp0 || x.exp;
+      const expText = deliv ? (dayNo(deliv.at.split(',')[0]) <= dayNo(e0) ? 'Delivered on time' : 'Delivered ' + (dayNo(deliv.at.split(',')[0]) - dayNo(e0)) + ' days late') + (x.exp0 ? ' (first promised ' + x.exp0 + ')' : '') : n < 0 ? 'Late by ' + (-n) + ' day' + (n === -1 ? '' : 's') : n === 0 ? 'Due today' : n + ' day' + (n === 1 ? '' : 's') + ' left' + (x.exp0 ? ' · was ' + x.exp0 : '');
+      const ci = ls ? TST.indexOf(ls.stage) : 0;
+      return Object.assign({}, x, {
+        poShort: String(x.po).split(' ')[0], sentAt: sent ? sent.at : x.sent, statusText: st === 'Overdue' ? x.late : st,
+        pillStyle: pill(st === 'Delivered' ? 'green' : st === 'Overdue' ? 'red' : st === 'Out for delivery' ? 'amber' : 'blue'),
+        expText: expText, expStyle: 'font-size: 12px; ' + (!deliv && n < 0 ? 'color: #B91C1C; font-weight: 600' : 'color: #5D6470'),
+        lastText: last ? last.stage + (last.place ? ' · ' + last.place : '') : '–',
+        lastMeta: last ? last.at + ' · ' + (last.src === 'auto' ? 'from transporter website' : last.src) : '',
+        open: s.openShip === x.id, expanded: s.openShip === x.id ? 'true' : 'false', toggleLabel: s.openShip === x.id ? 'Hide details' : 'Details',
+        toggle: () => this.setState({ openShip: s.openShip === x.id ? '' : x.id }),
+        canAct: st !== 'Delivered',
+        openFollow: () => this.setState({ sfFor: x.id, sfF: { how: 'Called transporter', who: '', exp: '', note: '' }, sfErr: '' }),
+        openUpdate: () => this.setState({ suFor: x.id, suF: { stage: 'In transit', place: '', date: '2026-11-25', time: '', recv: '', note: '', pod: '' }, suErr: '' }),
+        addrText: x.addr || (x.env.split(', ').slice(1).join(', ')),
+        labelText: x.labels ? x.labels.length + ' labels printed from the system' + (x.labelPhoto ? ' · photo of pasted labels attached' : '') : 'Sent before go-live (no label copy)',
+        hasLabels: !!x.labels, showLabels: !!x.labels && s.viewLabels === x.id, labels: x.labels || [],
+        labelsBtn: s.viewLabels === x.id ? 'Hide labels' : 'View printed labels',
+        toggleLabels: () => this.setState({ viewLabels: s.viewLabels === x.id ? '' : x.id }),
+        hasPod: !!deliv, podText: deliv ? (deliv.note || 'Delivered') + ' · ' + deliv.at : '',
+        bar: TST.map((t, k2) => ({ style: 'height: 6px; flex: 1; border-radius: 3px; background: ' + (k2 < ci || st === 'Delivered' ? '#15803D' : k2 === ci ? (st === 'Overdue' ? '#B91C1C' : '#C2410C') : '#E4E4DE') })),
+        tl: all.slice().reverse().map((e, k2) => ({ stage: e.stage, place: e.place ? ' · ' + e.place : '', at: e.at, src: e.src === 'auto' ? 'from transporter website' : e.src, note: e.note, hasNote: !!e.note,
+          dot: 'width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; background: ' + (e.stage === 'Follow-up' ? '#2563EB' : k2 === 0 ? (st === 'Overdue' ? '#B91C1C' : st === 'Delivered' ? '#15803D' : '#C2410C') : '#15803D') }))
+      });
+    });
+    const shipCount = (f) => s.shipments.filter((x) => shipMatch(x, f)).length;
+    const SF = s.sfF || {}; const SFx = s.shipments.find((x) => x.id === s.sfFor);
+    const sf = SFx ? { open: true, title: SFx.inv + ' · ' + SFx.carrier + ' ' + SFx.lr, info: SFx.customer + ', ' + SFx.dest + ' · expected ' + SFx.exp + ' · ' + shipStatus(SFx),
+      how: SF.how, who: SF.who, exp: SF.exp, note: SF.note, hasErr: !!s.sfErr, err: s.sfErr,
+      set: ['how', 'who', 'exp', 'note'].reduce((m, k2) => { m[k2] = (e) => this.setState({ sfF: Object.assign({}, SF, { [k2]: e.target.value }), sfErr: '' }); return m; }, {}),
+      save: (e) => { if (e && e.preventDefault) e.preventDefault(); if (!(SF.note || '').trim()) { this.setState({ sfErr: 'Write what they said.' }); return; }
+        const newExp = this.fmt(SF.exp);
+        this.setState({ sfFor: '', shipments: s.shipments.map((y) => (y.id === SFx.id ? Object.assign({}, y, newExp ? { exp: newExp, exp0: y.exp0 || y.exp } : {}, newExp && dayNo(newExp) >= dayNo('25 Nov 2026') && y.state === 'overdue' ? { state: 'transit' } : {}, { follow: 'Followed up', trk: (y.trk || []).concat([{ stage: 'Follow-up', at: nowAt(), src: 'by ' + me, place: '', note: SF.how + (SF.who ? ' (' + SF.who + ')' : '') + ': ' + SF.note.trim() + (newExp ? ' · new expected date ' + newExp : '') }]) }) : y)) }); } } : { open: false };
+    const SU = s.suF || {}; const SUx = s.shipments.find((x) => x.id === s.suFor);
+    const su = SUx ? { open: true, title: SUx.inv + ' · ' + SUx.carrier + ' ' + SUx.lr, stage: SU.stage, place: SU.place, date: SU.date, time: SU.time, recv: SU.recv, note: SU.note,
+      isDelivered: SU.stage === 'Delivered', hasErr: !!s.suErr, err: s.suErr,
+      set: ['stage', 'place', 'date', 'time', 'recv', 'note'].reduce((m, k2) => { m[k2] = (e) => this.setState({ suF: Object.assign({}, SU, { [k2]: e.target.value }), suErr: '' }); return m; }, {}),
+      setPod: (e) => this.setState({ suF: Object.assign({}, SU, { pod: e.target.files && e.target.files[0] ? e.target.files[0].name : '' }) }),
+      save: (e) => { if (e && e.preventDefault) e.preventDefault();
+        if (SU.stage === 'Delivered' && !(SU.recv || '').trim()) { this.setState({ suErr: 'Enter who received the goods.' }); return; }
+        const at = (this.fmt(SU.date) || '25 Nov 2026') + ', ' + (SU.time || nowAt().split(', ')[1]);
+        const note = [SU.stage === 'Delivered' ? 'Received by ' + SU.recv.trim() : '', SU.pod ? 'proof of delivery: ' + SU.pod : '', (SU.note || '').trim()].filter(Boolean).join(' · ');
+        this.setState({ suFor: '', shipments: s.shipments.map((y) => (y.id === SUx.id ? Object.assign({}, y, SU.stage === 'Delivered' ? { state: 'delivered', late: 'Delivered ' + at.split(' ').slice(0, 2).join(' ').replace(',', '') } : {}, { trk: (y.trk || []).concat([{ stage: SU.stage, at: at, src: 'by ' + me, place: (SU.place || '').trim(), note: note }]) }) : y)) }); } } : { open: false };
     const overdue = s.shipments.filter((x) => x.state === 'overdue');
     const overdueShips = overdue.map((x) => Object.assign({}, x, { pillStyle: pill('red') }));
     const isReady = (x) => ['Ready', 'Received'].indexOf(x.status) >= 0;
@@ -1572,7 +1661,7 @@ class Component extends DCLogic {
       const known = CL && (CL.addresses || []).some((b) => b.line1 === A.line1 && b.pin === A.pin);
       const sid = 'S' + (s.shipments.length + 1);
       const boxesText = s.pkBoxes.length + ' boxes · ' + s.pkBoxes.map((t, i) => 'Box ' + (i + 1) + ': ' + t).join(' · ');
-      const ship = { id: sid, inv: s.pkInv, customer: PK.customer, dest: PK.city || PK.plant, carrier: s.pkCarrier, lr: lrText(s.pkCarrier, s.pkLr.trim()), sent: '25 Nov 2026', exp: this.fmt(s.pkExp) || '2 Dec 2026', state: 'transit', late: 'On time', po: PK.id, boxes: boxesText, env: s.pkEnv, addr: pkAddrText, addrObj: Object.assign({}, A), labels: labelsCopy, labelPhoto: s.pkPhoto, follow: '' };
+      const ship = { id: sid, inv: s.pkInv, customer: PK.customer, dest: PK.city || PK.plant, carrier: s.pkCarrier, lr: lrText(s.pkCarrier, s.pkLr.trim()), sent: '25 Nov 2026', exp: this.fmt(s.pkExp) || '2 Dec 2026', state: 'transit', late: 'On time', po: PK.id, boxes: boxesText, env: s.pkEnv, addr: pkAddrText, addrObj: Object.assign({}, A), labels: labelsCopy, labelPhoto: s.pkPhoto, follow: '', trk: [{ stage: 'Packed', at: nowAt(), src: 'by ' + me, place: '', note: s.pkBoxes.length + ' boxes' }, { stage: 'Dispatched', at: nowAt(), src: 'by ' + me, place: 'Faridabad', note: 'Handed to ' + s.pkCarrier + ', ' + lrText(s.pkCarrier, s.pkLr.trim()) }] };
       const closed = Object.assign({}, PK, { prod: 'Dispatched', packed: '25 Nov 2026', boxes: boxesText, lines: PK.lines.map((y) => Object.assign({}, y, { status: 'Dispatched' })) });
       this.setState({
         orders: s.orders.filter((o) => o.id !== PK.id), closedOrders: s.closedOrders.concat([closed]),
@@ -1581,7 +1670,7 @@ class Component extends DCLogic {
         packFor: '', pkErr: '',
         leads: CL ? s.leads.map((l) => (l.id === CL.id ? Object.assign({}, l, { addresses: (s.pkSaveAddr && !known) ? (l.addresses || []).concat([Object.assign({}, A, { label: (A.city || 'Delivery') + ' · ' + (A.line1 || '').split(',')[0] })]) : (l.addresses || []),
           activity: [{ date: '25 Nov 2026', type: 'Dispatched', by: me, note: PK.id + ' · ' + s.pkInv + ' by ' + s.pkCarrier + ' ' + lrText(s.pkCarrier, s.pkLr.trim()) + ' · ' + s.pkBoxes.length + ' boxes to ' + shortAddr(A), next: '' }].concat(l.activity) }) : l)) : s.leads,
-        dispatchMsg: PK.id + ' dispatched with ' + s.pkInv + ' by ' + s.pkCarrier + '. It now shows in Step 5 below' + (CL ? ', on the client page' : '') + ' and in Payments (invoice not due yet). The address and a copy of the box labels are saved with the shipment.'
+        dispatchMsg: PK.id + ' dispatched with ' + s.pkInv + ' by ' + s.pkCarrier + '. It now shows under Shipments below' + (CL ? ', on the client page' : '') + ' and in Payments (invoice not due yet). The address and a copy of the box labels are saved with the shipment.'
       });
     };
     const remAll = [];
@@ -1883,7 +1972,17 @@ class Component extends DCLogic {
       printOpen: s.printOpen, togglePrint: () => this.setState({ printOpen: !s.printOpen }),
       doPrint: () => { if (typeof window !== 'undefined' && window.print) window.print(); },
 
-      shipFilters: ['All', 'Overdue', 'In transit', 'Delivered'].map((f) => ({ label: f, style: chip(s.shipFilter === f), pick: () => this.setState({ shipFilter: f }) })),
+      shipFilters: shipFilterList.map((f) => ({ label: f + ' (' + shipCount(f) + ')', style: chip((s.shipFilter || 'All') === f), pick: () => this.setState({ shipFilter: f }) })),
+      noShipRows: shipRows.length === 0, sf: sf, su: su,
+      dboard: [
+        { label: 'Ready to pack', count: String(readyRows.filter((r) => r.ready).length), hint: 'Waiting for packing', f: '' },
+        { label: 'In transit', count: String(shipCount('In transit')), hint: 'On the way', f: 'In transit' },
+        { label: 'Out for delivery', count: String(shipCount('Out for delivery')), hint: 'Arriving today', f: 'Out for delivery' },
+        { label: 'Overdue', count: String(shipCount('Overdue')), hint: 'Past expected date', f: 'Overdue', warn: true },
+        { label: 'Delivered', count: String(shipCount('Delivered')), hint: 'With proof of delivery', f: 'Delivered' }
+      ].map((b) => ({ label: b.label, count: b.count, hint: b.hint, pick: () => this.setState({ shipFilter: b.f || 'All' }),
+        numStyle: 'font-size: 28px; font-weight: 700; color: ' + (b.warn && b.count !== '0' ? '#B91C1C' : '#1B1E23'),
+        style: 'font: inherit; text-align: left; cursor: pointer; color: #1B1E23; display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 12px; ' + ((s.shipFilter || 'All') === b.f ? 'background: #FDEEE6; border: 1px solid #C2410C' : 'background: #FFFFFF; border: 1px solid #E4E4DE') })),
       shipRows: shipRows, flow: flow,
       readyRows: readyRows, noReady: readyRows.length === 0, pk: pk, savePack: savePack, dispatchMsg: s.dispatchMsg,
       closePack: () => this.setState({ packFor: '', pkErr: '' }),

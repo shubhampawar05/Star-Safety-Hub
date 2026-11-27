@@ -24,3 +24,12 @@ Source of the prototype (Design canvas format). `index.html` on this branch is s
 - Queue table: when each PO joined the queue and how long it has waited, current stage with how long it has been there and a progress bar, deliver-by with days left. Actions: Start production (first order, admin), Move to next stage (admin), Request priority.
 - Timeline per PO (button on each row): every stage with date, time, who updated it and how long it took. Priority moves appear in it too.
 - The PO page history and the Orders list show the production stage.
+- Open question: the real production stages are not confirmed yet. The stages above are placeholders.
+
+## Dispatch and tracking changes
+- Summary boxes: Ready to pack, In transit, Out for delivery, Overdue, Delivered. Clicking one filters the list.
+- Shipments list: invoice and PO, customer and city, transporter and LR, dispatched date and time, expected date with days left or days late, last tracking update with time and source (transporter website or a named person), status.
+- Shipment details: PO, envelope, box-wise packing, delivery address, printed labels, proof of delivery, and a tracking timeline (Packed → Dispatched → In transit hubs → Out for delivery → Delivered, plus follow-ups) with date, time and source.
+- Log follow-up popup: how, who you spoke to, what they said, optional new expected date (keeps the first promised date).
+- Update status popup for transporters without online tracking: In transit (with place), Out for delivery, or Delivered (received by, proof of delivery file).
+- Pack and dispatch now opens as a popup. Saving it records the Packed and Dispatched entries with time.
